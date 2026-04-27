@@ -1,0 +1,82 @@
+@media (max-width: 1024px) {
+    .hero-grid,
+    .categories-grid,
+    .posts-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  
+    .hero h1 {
+      max-width: 12ch;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .nav-links,
+    .nav-actions {
+      display: none;
+    }
+  
+    .menu-toggle {
+      display: block;
+    }
+  
+    .hero {
+      padding-top: 3rem;
+    }
+  
+    .hero-grid,
+    .categories-grid,
+    .posts-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .hero h1 {
+      font-size: 2.4rem;
+      max-width: 100%;
+    }
+  
+    .section-heading h2 {
+      font-size: 1.6rem;
+    }
+  
+    .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.2rem 0;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .auth-wrapper {
+      grid-template-columns: 1fr;
+    }
+  
+    .auth-brand-panel {
+      order: 2;
+    }
+  
+    .auth-form-panel {
+      order: 1;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .auth-page {
+      padding: 2rem 0 4rem;
+    }
+  
+    .auth-card {
+      padding: 1.4rem;
+      border-radius: 20px;
+    }
+  
+    .auth-card-header h2 {
+      font-size: 1.6rem;
+    }
+  
+    .auth-brand-panel h1 {
+      font-size: 2.2rem;
+      max-width: 100%;
+    }
+  }

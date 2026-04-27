@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RUSH-B | Accueil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/responsive.css" />
+</head>
+<body>
+  <div class="site-bg"></div>
+
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/" class="logo">
+        <span class="logo-mark">R</span>
+        <span class="logo-text">RUSH-B</span>
+      </a>
+
+      <nav class="nav-links" id="mobile-menu">
+        <a href="/">Accueil</a>
+        <a href="/posts">Posts</a>
+        <a href="/create-post">Créer</a>
+        <a href="/profile">Profil</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="/login" class="btn btn-secondary">Connexion</a>
+        <a href="/register" class="btn btn-primary">Inscription</a>
+      </div>
+
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <span class="eyebrow">Le forum où les squads se forment</span>
+          <h1>Le matchmaking t’a trahi. </h1>
+          <h1>Nous non.</h1>
+
+          <p>
+            Un forum pensé pour les joueurs qui veulent rencontrer du monde,
+            organiser des parties, partager des astuces et discuter de leurs jeux préférés.
+          </p>
+          <div class="hero-actions">
+            <a href="/register" class="btn btn-primary">Commencer</a>
+            <a href="/posts" class="btn btn-ghost">Explorer les posts</a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-card">
+              <strong>120+</strong>
+              <span>joueurs actifs</span>
+            </div>
+            <div class="stat-card">
+              <strong>35</strong>
+              <span>squads formés</span>
+            </div>
+            <div class="stat-card">
+              <strong>8</strong>
+              <span>jeux populaires</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-panel">
+          <div class="panel-glow"></div>
+          <div class="featured-post">
+            <span class="live-badge">Live party finder</span>
+            <h3>Recherche mates Valorant ranked ce soir</h3>
+            <p>Silver / Gold, vocal Discord, chill mais sérieux. On joue vers 21h.</p>
+
+            <div class="tag-row">
+              <span class="tag">Valorant</span>
+              <span class="tag">PC</span>
+              <span class="tag">Ranked</span>
+              <span class="tag">Vocal</span>
+            </div>
+
+            <div class="post-meta">
+              <span>Par NeoRush</span>
+              <span>24 likes</span>
+              <span>12 commentaires</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="categories-section">
+      <div class="container">
+        <div class="section-heading">
+          <span class="section-label">Catégories</span>
+          <h2>Choisis ton univers</h2>
+        </div>
+
+        <div class="categories-grid">
+          <article class="category-card">
+            <h3>FPS</h3>
+            <p>Valorant, CS2, Overwatch, R6.</p>
+          </article>
+          <article class="category-card">
+            <h3>Sandbox</h3>
+            <p>Minecraft, builds, serveurs, survie.</p>
+          </article>
+          <article class="category-card">
+            <h3>MOBA</h3>
+            <p>LoL, Dota, stratégie et ranked.</p>
+          </article>
+          <article class="category-card">
+            <h3>Rocket League</h3>
+            <p>Duo, trio, ranked et clips.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="posts-preview">
+      <div class="container">
+        <div class="section-heading">
+          <span class="section-label">Tendance</span>
+          <h2>Posts populaires</h2>
+        </div>
+
+        <div class="filter-bar">
+          <button class="filter-chip active">Tous</button>
+          <button class="filter-chip">FPS</button>
+          <button class="filter-chip">Co-op</button>
+          <button class="filter-chip">Ranked</button>
+          <button class="filter-chip">LFG</button>
+        </div>
+
+        <div class="posts-grid">
+          <article class="post-card">
+            <div class="post-top">
+              <span class="user-badge">AceHunter</span>
+              <span class="time">Il y a 2h</span>
+            </div>
+            <h3>Besoin d’un mate CS2 pour grind ce soir</h3>
+            <p>Je cherche quelqu’un de calme avec micro pour MM ou Faceit.</p>
+            <div class="tag-row">
+              <span class="tag">CS2</span>
+              <span class="tag">PC</span>
+              <span class="tag">Ranked</span>
+            </div>
+            <div class="post-bottom">
+              <span>18 likes</span>
+              <span>7 commentaires</span>
+            </div>
+          </article>
+
+          <article class="post-card">
+            <div class="post-top">
+              <span class="user-badge">BlockQueen</span>
+              <span class="time">Il y a 5h</span>
+            </div>
+            <h3>Qui veut commencer un serveur Minecraft moddé ?</h3>
+            <p>Projet chill, survie + build, ouvert aux débutants motivés.</p>
+            <div class="tag-row">
+              <span class="tag">Minecraft</span>
+              <span class="tag">Sandbox</span>
+              <span class="tag">Co-op</span>
+            </div>
+            <div class="post-bottom">
+              <span>31 likes</span>
+              <span>14 commentaires</span>
+            </div>
+          </article>
+
+          <article class="post-card">
+            <div class="post-top">
+              <span class="user-badge">AerialFox</span>
+              <span class="time">Il y a 1j</span>
+            </div>
+            <h3>Team Rocket League pour progresser ensemble</h3>
+            <p>Je cherche des joueurs réguliers pour monter et revoir les rotations.</p>
+            <div class="tag-row">
+              <span class="tag">Rocket League</span>
+              <span class="tag">Ranked</span>
+              <span class="tag">Team</span>
+            </div>
+            <div class="post-bottom">
+              <span>22 likes</span>
+              <span>9 commentaires</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
+      <div class="footer-links">
+        <a href="/">Accueil</a>
+        <a href="/posts">Explorer</a>
+        <a href="/register">Rejoindre</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
