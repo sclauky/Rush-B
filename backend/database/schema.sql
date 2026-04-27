@@ -18,20 +18,7 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    game_id INTEGER,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    image_path TEXT,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE SET NULL
-);
-
-CREATE TABLE categories (
+CREATE TABLE game_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
@@ -39,7 +26,27 @@ CREATE TABLE categories (
 CREATE TABLE games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    slug TEXT NOT NULL UNIQUE
+    game_type_id INTEGER NOT NULL,
+    FOREIGN KEY (game_type_id) REFERENCES game_types(id) ON DELETE CASCADE
+);
+
+CREATE TABLE categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    game_id INTEGER NOT NULL,
+    mode TEXT NOT NULL CHECK (mode IN ('Chill', 'Ranked')),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    image_path TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
 );
 
 CREATE TABLE post_categories (
@@ -81,13 +88,24 @@ CREATE TABLE comment_reactions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+INSERT INTO game_types (name) VALUES
+('FPS'),
+('MMO'),
+('Survival'),
+('Sport');
+
+INSERT INTO games (name, game_type_id) VALUES
+('Valorant', 1),
+('Counter-Strike 2', 1),
+('World of Warcraft', 2),
+('Final Fantasy XIV', 2),
+('Minecraft', 3),
+('Rust', 3),
+('Rocket League', 4);
+
 INSERT INTO categories (name) VALUES
 ('Aide'),
-('Tutoriels'),
-('Ranked');
-
-INSERT INTO games (name, slug) VALUES
-('Counter-Strike: Global Offensive', 'CSGO'),
-('Valorant', 'Valo'),
-('League of Legends', 'LOL'),
-('Minecraft', 'Minecraft');
+('Tutoriel'),
+('Discussion'),
+('Build'),
+('Recrutement');
