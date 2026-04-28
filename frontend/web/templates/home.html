@@ -30,7 +30,9 @@
 
       <div class="nav-actions">
         <a href="/login" class="btn btn-secondary">Connexion</a>
-        <a href="/register" class="btn btn-primary">Inscription</a>
+        <button class="btn btn-primary open-register-modal" type="button">
+          Inscription
+        </button>
       </div>
 
       <button class="menu-toggle" id="menu-toggle">☰</button>
@@ -50,7 +52,9 @@
             organiser des parties, partager des astuces et discuter de leurs jeux préférés.
           </p>
           <div class="hero-actions">
-            <a href="/register" class="btn btn-primary">Commencer</a>
+            <button class="btn btn-primary open-register-modal" type="button">
+              Commencer
+            </button>
             <a href="/posts" class="btn btn-ghost">Explorer les posts</a>
           </div>
 
@@ -202,10 +206,170 @@
       <div class="footer-links">
         <a href="/">Accueil</a>
         <a href="/posts">Explorer</a>
-        <a href="/register">Rejoindre</a>
+        <button class="text-link open-register-modal" type="button">Rejoindre</button>
       </div>
     </div>
   </footer>
+
+  <!-- Modal d'inscription -->
+  <div class="modal-overlay" id="registerModal" aria-hidden="true">
+    <div class="modal-dialog register-modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
+      <button class="modal-close" id="closeRegisterModal" type="button" aria-label="Fermer">
+        ×
+      </button>
+
+      <div class="modal-header">
+        <span class="section-label">Inscription</span>
+        <h2 id="registerModalTitle">Créer un compte</h2>
+        <p>Rejoins RUSH-B et commence à trouver de vrais mates.</p>
+      </div>
+
+      <form class="auth-form" action="/register" method="POST">
+        <div class="form-group">
+          <label for="register-username">Nom d’utilisateur</label>
+          <input
+            type="text"
+            id="register-username"
+            name="username"
+            placeholder="Ton pseudo"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="register-email">Adresse e-mail</label>
+          <input
+            type="email"
+            id="register-email"
+            name="email"
+            placeholder="exemple@mail.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="register-password">Mot de passe</label>
+          <input
+            type="password"
+            id="register-password"
+            name="password"
+            placeholder="Choisis un mot de passe"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="register-confirm-password">Confirmer le mot de passe</label>
+          <input
+            type="password"
+            id="register-confirm-password"
+            name="confirm_password"
+            placeholder="Retape ton mot de passe"
+            required
+          />
+        </div>
+
+        <label class="checkbox-row terms-row">
+          <input type="checkbox" required />
+          <span>J’accepte les conditions d’utilisation du forum.</span>
+        </label>
+
+        <button type="submit" class="btn btn-primary auth-submit">
+          Créer mon compte
+        </button>
+      </form>
+
+      <div class="auth-divider">
+        <span>ou</span>
+      </div>
+
+      <div class="auth-alt-actions">
+        <button class="btn btn-secondary auth-alt-btn" type="button">
+          S’inscrire avec Google
+        </button>
+        <button class="btn btn-secondary auth-alt-btn" type="button">
+          S’inscrire avec GitHub
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay {{if .ShowOnboarding}}is-open{{end}}" id="onboardingModal" aria-hidden="{{if .ShowOnboarding}}false{{else}}true{{end}}">
+    <div class="modal-dialog onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+      <div class="modal-header">
+        <span class="section-label">Première connexion</span>
+        <h2 id="onboardingTitle">Personnalise ton feed</h2>
+        <p>Choisis tes préférences pour voir les posts les plus adaptés.</p>
+      </div>
+  
+      <form class="auth-form" action="/onboarding" method="POST">
+        <div class="form-group">
+          <label for="games_played">Jeux joués</label>
+          <input
+            type="text"
+            id="games_played"
+            name="games_played"
+            placeholder="Ex : Valorant, CS2, Minecraft"
+            required
+          />
+        </div>
+  
+        <div class="form-group">
+          <label>Loisir ou compétition</label>
+          <div class="choice-row">
+            <label class="choice-pill">
+              <input type="radio" name="play_style" value="loisir" required>
+              <span>Loisir</span>
+            </label>
+            <label class="choice-pill">
+              <input type="radio" name="play_style" value="competition" required>
+              <span>Compétition</span>
+            </label>
+          </div>
+        </div>
+  
+        <div class="form-group">
+          <label for="game_types">Type de jeux</label>
+          <input
+            type="text"
+            id="game_types"
+            name="game_types"
+            placeholder="Ex : FPS, Ranked, Sandbox"
+            required
+          />
+        </div>
+  
+        <div class="form-group">
+          <label>Tu cherches des mates ?</label>
+          <div class="choice-row">
+            <label class="choice-pill">
+              <input type="radio" name="looking_for_mates" value="1" required>
+              <span>Oui</span>
+            </label>
+            <label class="choice-pill">
+              <input type="radio" name="looking_for_mates" value="0" required>
+              <span>Non</span>
+            </label>
+          </div>
+        </div>
+  
+        <div class="form-group">
+          <label for="skill_level">Ton niveau</label>
+          <select id="skill_level" name="skill_level" required>
+            <option value="">Choisir un niveau</option>
+            <option value="debutant">Débutant</option>
+            <option value="intermediaire">Intermédiaire</option>
+            <option value="avance">Avancé</option>
+            <option value="competitif">Compétitif</option>
+          </select>
+        </div>
+  
+        <button type="submit" class="btn btn-primary auth-submit">
+          Valider mes préférences
+        </button>
+      </form>
+    </div>
+  </div>
 
   <script src="/static/js/main.js"></script>
 </body>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RUSH-B | Création de compte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/responsive.css" />
+</head>
+<body>
+  <div class="site-bg"></div>
+
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/" class="logo">
+        <span class="logo-mark">R</span>
+        <span class="logo-text">RUSH-B</span>
+      </a>
+
+      <nav class="nav-links" id="mobile-menu">
+        <a href="/">Accueil</a>
+        <a href="/posts">Posts</a>
+        <a href="/create-post">Créer</a>
+        <a href="/profile">Profil</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="/login" class="btn btn-secondary">Connexion</a>
+        <a href="/register" class="btn btn-primary">Inscription</a>
+      </div>
+
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+    </div>
+  </header>
+
+  <main class="auth-page">
+    <div class="container auth-wrapper">
+      <section class="auth-brand-panel">
+        <span class="eyebrow">BIENVENUE DANS LE FORUM ANTI-RANDOMS</span>
+        <h1>Crée ton compte. Trouve une vraie team.</h1>
+        <p>
+          Rejoins la communauté, poste tes recherches de mates, discute jeux
+          vidéo et commence enfin à lancer de meilleures games.
+        </p>
+
+        <div class="auth-quote-card">
+          <span class="live-badge">Nouveau joueur</span>
+          <h3>Le bon squad commence ici.</h3>
+          <p>
+            Un compte, quelques clics, et tu rejoins un forum pensé pour les
+            joueurs qui veulent mieux que du hasard.
+          </p>
+        </div>
+      </section>
+
+      <section class="auth-form-panel">
+        <div class="auth-card">
+          <div class="auth-card-header">
+            <span class="section-label">Inscription</span>
+            <h2>Créer un compte</h2>
+            <p>Remplis les champs ci-dessous pour rejoindre RUSH-B.</p>
+          </div>
+
+          <form class="auth-form" action="/register" method="POST">
+            <div class="form-group">
+              <label for="username">Nom d’utilisateur</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Ton pseudo"
+                required
+              />
+            </div>
+
+            <form class="auth-form" action="/register" method="POST">
+                <div class="form-group">
+                  <label for="Firstname">Prénom</label>
+                  <input
+                    type="text"
+                    id="Firstname"
+                    name="Firstname"
+                    placeholder="Ton prénom"
+                    required
+                  />
+                </div>
+
+            <form class="auth-form" action="/register" method="POST">
+                <div class="form-group">
+                  <label for="Lastname">Nom</label>
+                  <input
+                    type="text"
+                    id="Lastname"
+                    name="Lastname"
+                    placeholder="Ton nom"
+                    required
+                  />
+                </div>
+
+            </form>
+            <div class="form-group">
+              <label for="email">Adresse e-mail</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="exemple@mail.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Mot de passe</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Choisis un mot de passe"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="confirm-password">Confirmer le mot de passe</label>
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm_password"
+                placeholder="Retape ton mot de passe"
+                required
+              />
+            </div>
+
+            <label class="checkbox-row terms-row">
+              <input type="checkbox" required />
+              <span>J’accepte les conditions d’utilisation du forum.</span>
+            </label>
+
+            <button type="submit" class="btn btn-primary auth-submit">
+              Créer mon compte
+            </button>
+          </form>
+
+          <div class="auth-divider">
+            <span>ou</span>
+          </div>
+
+          <div class="auth-alt-actions">
+            <button class="btn btn-secondary auth-alt-btn" type="button">
+              S’inscrire avec Google
+            </button>
+            <button class="btn btn-secondary auth-alt-btn" type="button">
+              S’inscrire avec GitHub
+            </button>
+          </div>
+
+          <p class="auth-footer-text">
+            Déjà un compte ?
+            <a href="/login">Se connecter</a>
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
+      <div class="footer-links">
+        <a href="/">Accueil</a>
+        <a href="/posts">Explorer</a>
+        <a href="/login">Connexion</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
