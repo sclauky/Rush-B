@@ -29,7 +29,7 @@ Rush-B/
 │       │       ├── jwt.go
 │       │       └── password.go
 │       └── post/
-│           └── -.js
+│           └── post.go
 └── frontend/
     └── web/
         ├── static/
