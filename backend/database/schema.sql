@@ -11,8 +11,6 @@ CREATE TABLE users (
     biography TEXT
 );
 
-CREATE TABLE sqlite_sequence(name,seq);
-
 CREATE TABLE sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
