@@ -330,13 +330,19 @@
   
         <div class="form-group">
           <label for="game_types">Type de jeux</label>
-          <input
-            type="text"
-            id="game_types"
-            name="game_types"
-            placeholder="Ex : FPS, Ranked, Sandbox"
-            required
-          />
+          <select id="game_types" name="game_types" required>
+            <option value="">Choisir un type de jeu</option>
+            <option value="fps">FPS</option>
+            <option value="moba">MOBA</option>
+            <option value="sandbox">Sandbox</option>
+            <option value="co-op">Co-op</option>
+            <option value="rpg">RPG</option>
+            <option value="mmorpg">MMORPG</option>
+            <option value="battle-royale">Battle Royale</option>
+            <option value="ranked">Ranked</option>
+            <option value="simulation">Simulation</option>
+            <option value="survival">Survival</option>
+          </select>
         </div>
   
         <div class="form-group">
