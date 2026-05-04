@@ -1,4 +1,4 @@
-// Charger les informations du profil
+
 async function loadProfile() {
     try {
         const userId = new URLSearchParams(window.location.search).get('id') || '1';
@@ -10,21 +10,18 @@ async function loadProfile() {
 
         const user = await response.json();
 
-        // Mettre à jour les éléments de la page
         document.getElementById('profileAvatar').src = user.avatar || '/uploads/default-avatar.jpg';
         document.getElementById('profileUsername').textContent = user.username;
         document.getElementById('profileBio').textContent = user.bio || 'Aucune bio disponible';
         document.getElementById('profileEmail').textContent = user.email;
         document.getElementById('postCount').textContent = user.post_count;
         document.getElementById('followersCount').textContent = user.followers;
-
-        // Formater la date
+        
         const joinDate = new Date(user.created_at);
         const options = { year: 'numeric', month: 'long' };
         document.getElementById('profileJoined').textContent = 
             `Membre depuis ${joinDate.toLocaleDateString('fr-FR', options)}`;
 
-        // Charger les posts de l'utilisateur
         loadUserPosts(userId);
     } catch (error) {
         console.error('Erreur:', error);
@@ -32,7 +29,6 @@ async function loadProfile() {
     }
 }
 
-// Charger les posts de l'utilisateur
 async function loadUserPosts(userId) {
     try {
         const response = await fetch(`/api/user/posts/${userId}`);
@@ -77,7 +73,6 @@ async function loadUserPosts(userId) {
     }
 }
 
-// Fonction utilitaire pour obtenir le temps relatif
 function getRelativeTime(date) {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
@@ -90,12 +85,10 @@ function getRelativeTime(date) {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Fonction utilitaire pour échapper le HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Charger le profil au chargement de la page
 document.addEventListener('DOMContentLoaded', loadProfile);

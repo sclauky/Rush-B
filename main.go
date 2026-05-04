@@ -1,24 +1,15 @@
 package main
 
 import (
-	"database/sql"
-	"html/template"
-	"log"
-	"net/http"
-	"os"
-	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+    "socialauth/backend/forum/auth/db"
+    "socialauth/backend/forum/auth/handlers"
+
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+    "log"
+    "os"
 )
-
-var (
-	tmpl *template.Template
-	db   *sql.DB
-)
-
-type HomeData struct {
-	ShowOnboarding bool
-}
 
 func main() {
 	var err error
