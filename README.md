@@ -2,11 +2,11 @@
 
 ## Intro
 
-Notre Projet *** Rush B *** est un forum. Il a pour but de mettre en lien des joueurs afin de trouver des gens ayant les mêmes centres d'intérêt, des équipiers de jeux ou, tout simplement, échanger avec d'autres utilisateurs.
+Notre Projet ***Rush B*** est un forum. Il a pour but de mettre en lien des joueurs afin de trouver des gens ayant les mêmes centres d'intérêt, des équipiers de jeux ou, tout simplement, échanger avec d'autres utilisateurs.
 
 ## Arborescence
 
-```
+```bash
 Rush-B/
 ├── go.mod
 ├── main.go
@@ -51,3 +51,5 @@ Rush-B/
             ├── profile.html
             └── register.html
 ```
+
+## lancement du site
