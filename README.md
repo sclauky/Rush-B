@@ -54,4 +54,6 @@ Rush-B/
 
 ## lancement du site
 
-go run main.go 
+[https://www.msys2.org/](https://www.msys2.org/)
+
+go run main.go
