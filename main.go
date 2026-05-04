@@ -1,7 +1,6 @@
 package main
 
 import (
-    "net/http"
 
     "socialauth/backend/forum/auth/db"
     "socialauth/backend/forum/auth/handlers"
