@@ -1,4 +1,5 @@
-.env 
-*/database
-go.mod
-go.sum
+.env
+
+backend/database/*.db
+backend/database/*.db-shm
+backend/database/*.db-wal

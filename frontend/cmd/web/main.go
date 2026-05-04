@@ -103,7 +103,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := HomeData{
-		ShowOnboarding: onboardingDone == 0,
+		ShowOnboarding: false,
 	}
 
 	err = tmpl.ExecuteTemplate(w, "home.html", data)
