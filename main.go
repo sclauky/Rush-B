@@ -3,8 +3,8 @@ package main
 import (
     "net/http"
 
-    "socialauth/forum/auth/db"
-    "socialauth/forum/auth/handlers"
+    "socialauth/backend/forum/auth/db"
+    "socialauth/backend/forum/auth/handlers"
 
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"

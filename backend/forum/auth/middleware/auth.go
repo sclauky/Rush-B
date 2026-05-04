@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"socialauth/utils"
+	"socialauth/backend/forum/auth/utils"
 )
 
 type contextKey string

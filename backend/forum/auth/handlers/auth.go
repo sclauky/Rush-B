@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"socialauth/utils"
+	"socialauth/backend/forum/auth/utils"
 )
 
 type AuthHandler struct {
