@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier le profil - Forum</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="site-bg"></div>
+
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="/" class="logo">
+                <div class="logo-mark">F</div>
+                <span class="logo-text">FORUM</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Accueil</a>
+                <a href="/posts.html">Posts</a>
+                <a href="/profile.html">Profil</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-ghost">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="padding: 3rem 0;">
+        <div class="edit-profile-wrapper">
+            <div class="edit-profile-card">
+                <div class="edit-header">
+                    <h1>Modifier le profil</h1>
+                    <p>Personnalisez vos informations publiques</p>
+                </div>
+
+                <form id="editProfileForm" enctype="multipart/form-data">
+                    <input type="hidden" id="userId" name="user_id" value="1">
+
+                    <!-- Photo de profil -->
+                    <div class="form-group">
+                        <label>Photo de profil</label>
+                        <div class="avatar-upload-section">
+                            <div class="avatar-preview-wrapper">
+                                <img id="avatarPreview" src="/uploads/default-avatar.jpg" alt="Avatar" class="avatar-preview">
+                            </div>
+                            <div class="avatar-upload-controls">
+                                <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('avatarInput').click()">
+                                    Choisir une image
+                                </button>
+                                <p class="upload-hint">JPG, PNG ou GIF • Max 5MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pseudo -->
+                    <div class="form-group">
+                        <label for="username">Pseudo</label>
+                        <input type="text" id="username" name="username" placeholder="Votre pseudo" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="votre@email.com" required>
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="form-group">
+                        <label for="bio">Bio</label>
+                        <textarea id="bio" name="bio" rows="4" placeholder="Parlez-nous de vous..." maxlength="200"></textarea>
+                        <span class="char-count"><span id="bioCount">0</span>/200</span>
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="form-actions">
+                        <a href="/profile.html" class="btn btn-ghost">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            Enregistrer les modifications
+                        </button>
+                    </div>
+
+                    <div id="successMessage" class="success-message" style="display: none;">
+                        ✓ Profil mis à jour avec succès !
+                    </div>
+                    <div id="errorMessage" class="error-message" style="display: none;">
+                        ✗ Erreur lors de la mise à jour
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 Forum. Tous droits réservés.</p>
+            <div class="footer-links">
+                <a href="#">Confidentialité</a>
+                <a href="#">Conditions</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="edit-profile.js"></script>
+</body>
+</html>
