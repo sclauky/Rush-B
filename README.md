@@ -54,7 +54,7 @@ Rush-B/
 
 ## lancement du site
 
-1) Télécharger msys2 depuis ce lien : https://www.msys2.org/ et l'installé
+1) Télécharger msys2 depuis ce lien : [https://www.msys2.org/](msys2) et l'installé
 2) Cliquer sur Démarrer et chercher variables d'environnement, cliquer sur "modifier les variables d'environnement système" 
 3) Cliquez sur Variables d'environement
 4) Puis sur PATH dans variable système, puis cliquez sur modifier*
