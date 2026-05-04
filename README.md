@@ -53,3 +53,5 @@ Rush-B/
 ```
 
 ## lancement du site
+
+go run main.go 
