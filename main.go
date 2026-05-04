@@ -23,7 +23,7 @@ type HomeData struct {
 func main() {
 	var err error
 
-	// 1) Connexion à la base SQLite
+	// 1) Connexion à la base SQLit
 	db, err = sql.Open("sqlite3", "backend/database/data.db")
 	if err != nil {
 		log.Fatal("Erreur ouverture DB:", err)
