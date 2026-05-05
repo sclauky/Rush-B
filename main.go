@@ -44,13 +44,24 @@ func main() {
 	fs := http.FileServer(http.Dir("frontend/web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	// 3.1) Fichiers profile statiques
+	http.HandleFunc("/edit-profile.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "frontend/web/profile/edit-profile.html")
+	})
+	http.HandleFunc("/profile.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "frontend/web/profile/profile.html")
+	})
+
+	// 3.2) Uploads
+	uploadsFS := http.FileServer(http.Dir("frontend/web/uploads"))
+	http.Handle("/uploads/", http.StripPrefix("/uploads/", uploadsFS))
+
 	// 4) Routes pages
 	http.HandleFunc("/", HomeHandler)
 	http.HandleFunc("/login", serveTemplate("login.html"))
 	http.HandleFunc("/register", serveTemplate("register.html"))
 	http.HandleFunc("/posts", serveTemplate("posts.html"))
 	http.HandleFunc("/create-post", serveTemplate("create-post.html"))
-	http.HandleFunc("/profile", serveTemplate("profile.html"))
 
 	// 5) Route pour enregistrer l’onboarding
 	http.HandleFunc("/onboarding", OnboardingHandler)

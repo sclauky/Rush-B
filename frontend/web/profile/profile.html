@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - Forum</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Profil - Rush-B</title>
+    <link rel="stylesheet" href="profile.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
@@ -15,13 +15,13 @@
     <nav class="navbar">
         <div class="container nav-inner">
             <a href="/" class="logo">
-                <div class="logo-mark">F</div>
-                <span class="logo-text">FORUM</span>
+                <div class="logo-mark">B</div>
+                <span class="logo-text">RUSH-B</span>
             </a>
             <div class="nav-links">
                 <a href="/">Accueil</a>
-                <a href="/posts.html">Posts</a>
-                <a href="/profile.html">Profil</a>
+                <a href="/frontend/web/posts/posts.html">Posts</a>
+                <a href="/frontend/web/profile/profile.html">Profil</a>
             </div>
             <div class="nav-actions">
                 <button class="btn btn-ghost">Déconnexion</button>
@@ -35,7 +35,7 @@
             <div class="profile-card">
                 <div class="profile-header">
                     <div class="profile-avatar-wrapper">
-                        <img id="profileAvatar" src="/uploads/default-avatar.jpg" alt="Avatar" class="profile-avatar">
+                        <img id="profileAvatar" src="https://via.placeholder.com/100x100?text=Avatar" alt="Avatar" class="profile-avatar">
                     </div>
                     <div class="profile-info">
                         <h1 id="profileUsername" class="profile-username">Chargement...</h1>
@@ -60,7 +60,6 @@
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                             <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
-                        <span id="profileEmail">email@example.com</span>
                     </div>
                     <div class="meta-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -73,7 +72,7 @@
                     </div>
                 </div>
 
-                <a href="/edit-profile.html" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
+                <a href="/frontend/web/profile/edit-profile.html" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
                     Modifier le profil
                 </a>
             </div>
@@ -90,7 +89,7 @@
 
     <footer class="footer">
         <div class="container footer-inner">
-            <p>&copy; 2026 Forum. Tous droits réservés.</p>
+            <p>&copy; 2026 Rush-B. Tous droits réservés.</p>
             <div class="footer-links">
                 <a href="#">Confidentialité</a>
                 <a href="#">Conditions</a>
