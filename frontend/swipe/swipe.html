@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GG.gg — Find Your Squad</title>
+  <title>Rush-B — Find Your Squad</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -17,8 +17,8 @@
   <nav class="navbar">
     <div class="nav-inner">
       <a href="/" class="logo">
-        <div class="logo-mark">GG</div>
-        <span class="logo-text">GG.gg</span>
+        <div class="logo-mark">B</div>
+        <span class="logo-text">Rush-B</span>
       </a>
       <div class="nav-links">
         <a href="/frontend/index.html">Accueil</a>
@@ -40,14 +40,14 @@
         <div class="swipe-title-wrap">
           <div class="swipe-eyebrow">
             <span class="dot"></span>
-            Squad Finder
+            Finder
           </div>
-          <h1 class="swipe-title">Trouve ton équipe</h1>
-          <p class="swipe-subtitle">Swipe pour matcher avec des gamers partageant ton style.</p>
+          <h1 class="swipe-title">Smash Or Pass</h1>
+          <p class="swipe-subtitle">Arrête de solo queue ta vie.</p>
         </div>
         <div class="tab-switcher">
           <button class="tab-btn active" id="tab-swipe">🎮 Swipe</button>
-          <button class="tab-btn" id="tab-matches">⚡ Matchs <span id="match-tab-count"></span></button>
+          <button class="tab-btn" id="tab-matches">⚡ Smash <span id="match-tab-count"></span></button>
         </div>
       </div>
 
@@ -65,14 +65,14 @@
               <!-- Loading -->
               <div class="loading-state" id="loading-state">
                 <div class="loading-spinner"></div>
-                <p class="loading-text">CHARGEMENT DES PROFILS...</p>
+                <p class="loading-text">30 secondes, on va chercher des profils !</p>
               </div>
 
               <!-- Empty -->
               <div class="empty-state" id="empty-state">
                 <div class="empty-icon">🎮</div>
                 <h3 class="empty-title">Plus personne</h3>
-                <p class="empty-sub">Tu as vu tous les profils disponibles. Reviens plus tard !</p>
+                <p class="empty-sub">Tu as vu tous les profils disponibles. (p'tit gourmand)</p>
                 <button class="btn btn-ghost btn-sm" id="btn-reload-profiles">Recharger</button>
               </div>
 
@@ -85,19 +85,19 @@
               <button class="action-btn action-like" id="btn-like" title="Liker">♥</button>
               <button class="action-btn action-super" id="btn-super" title="Super like">★</button>
             </div>
-            <p class="swipe-hint">← passer   ♥ liker   →</p>
+            <p class="swipe-hint">← pass   ♥  smash →</p>
           </div>
 
           <!-- Matches sidebar -->
           <aside class="matches-panel" id="matches-sidebar">
             <div class="matches-panel-header">
-              <span class="matches-panel-title">Mes matchs</span>
+              <span class="matches-panel-title">Mes smash</span>
               <span class="match-count-badge" id="match-sidebar-count">0</span>
             </div>
             <div class="matches-list" id="matches-sidebar-list">
               <div class="matches-empty">
                 <div class="matches-empty-icon">🎯</div>
-                <p>Tes matchs apparaîtront ici. Continue à swiper !</p>
+                <p>Tes smash apparaîtront ici. Continue à swiper !</p>
               </div>
             </div>
           </aside>
@@ -110,7 +110,7 @@
         <div class="matches-full-grid" id="matches-full-grid">
           <div class="matches-empty" style="grid-column: 1/-1; padding: 4rem 0;">
             <div class="matches-empty-icon">🎮</div>
-            <p>Aucun match pour le moment. Va swiper !</p>
+            <p>Aucun smash pour le moment. Va swiper !</p>
           </div>
         </div>
       </div>
@@ -122,8 +122,8 @@
   <div class="match-modal-overlay" id="match-modal">
     <div class="match-modal">
       <div class="match-sparkle">⚡</div>
-      <h2>GG ! C'est un match !</h2>
-      <p>Vous partagez les mêmes vibes gaming. Commencez à jouer ensemble !</p>
+      <h2>Lucky You ! C'est un match !</h2>
+      <p>OK c'est là que lock-in !</p>
       <div class="match-modal-avatars">
         <div class="match-m-avatar" id="match-me-avatar">
           <span class="match-m-avatar-text" id="match-me-text">?</span>
