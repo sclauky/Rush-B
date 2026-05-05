@@ -17,7 +17,8 @@ var (
 )
 
 type HomeData struct {
-	ShowOnboarding bool
+    ShowOnboarding bool
+    IsLoggedIn     bool
 }
 
 func main() {
@@ -117,10 +118,14 @@ func serveTemplate(name string) http.HandlerFunc {
 
 // TODO: à remplacer plus tard par une vraie récupération via cookie/session
 func getUserIDFromSession(r *http.Request) int {
-	// Pour tester l’onboarding : on simule un user ID 1
-	return 1
-}
+    testUser := r.URL.Query().Get("user")
 
+    if testUser == "1" {
+        return 1
+    }
+
+    return 0
+}
 // Handler de la home : décide si on affiche la popup onboarding ou pas
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(r)
@@ -153,8 +158,9 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := HomeData{
-		ShowOnboarding: onboardingDone == 0,
-	}
+    ShowOnboarding: onboardingDone == 0,
+    IsLoggedIn:     userID > 0,
+}
 
 	err = tmpl.ExecuteTemplate(w, "home.html", data)
 	if err != nil {
