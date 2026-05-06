@@ -8,7 +8,8 @@ CREATE TABLE users (
     role TEXT NOT NULL DEFAULT 'user',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     birth_date DATE,
-    biography TEXT
+    biography TEXT,
+    show_in_finder INTEGER NOT NULL DEFAULT 0 CHECK (show_in_finder IN (0, 1))
 );
 
 CREATE TABLE sessions (
@@ -118,29 +119,63 @@ CREATE TABLE user_game_types (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-`CREATE TABLE IF NOT EXISTS swipes (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			swiper_id INTEGER NOT NULL,
-			target_id INTEGER NOT NULL,
-			direction TEXT NOT NULL CHECK(direction IN ('like','pass')),
-			created_at DATETIME NOT NULL,
-			UNIQUE(swiper_id, target_id),
-			FOREIGN KEY (swiper_id) REFERENCES users(id) ON DELETE CASCADE,
-			FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
-		)`,
-		`CREATE TABLE IF NOT EXISTS matches (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user1_id INTEGER NOT NULL,
-			user2_id INTEGER NOT NULL,
-			created_at DATETIME NOT NULL,
-			UNIQUE(user1_id, user2_id),
-			FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
-			FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE
-		)`,
-		`CREATE TABLE IF NOT EXISTS user_photos (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id INTEGER NOT NULL,
-			photo_path TEXT NOT NULL,
-			position INTEGER NOT NULL DEFAULT 0,
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-		)`
+CREATE TABLE IF NOT EXISTS swipes (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	swiper_id INTEGER NOT NULL,
+	target_id INTEGER NOT NULL,
+	direction TEXT NOT NULL CHECK(direction IN ('like','pass')),
+	created_at DATETIME NOT NULL,
+	UNIQUE(swiper_id, target_id),
+	FOREIGN KEY (swiper_id) REFERENCES users(id) ON DELETE CASCADE,
+	FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS matches (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user1_id INTEGER NOT NULL,
+	user2_id INTEGER NOT NULL,
+	created_at DATETIME NOT NULL,
+	UNIQUE(user1_id, user2_id),
+	FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
+	FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_photos (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_id INTEGER NOT NULL,
+	photo_path TEXT NOT NULL,
+	position INTEGER NOT NULL DEFAULT 0,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ======================================================================================================================================================================================
+
+-- Ajout des infos de bases à mettre dans la database (jeux, catégories)
+-- Le INSERT OR IGNORE permet de ne pas insérer les données si elles existent déjà pour éviter de faire crash la db. 
+
+INSERT OR IGNORE INTO game_types (name) VALUES
+('FPS'),
+('MOBA'),
+('Battle Royale'),
+('MMORPG'),
+('Sandbox'),
+('Sport'),
+('Simulation');
+
+INSERT OR IGNORE INTO games (name, game_type_id) VALUES
+('Valorant', 1),
+('CS2', 1),
+('League of Legends', 2),
+('Fortnite', 3),
+('World of Warcraft', 4),
+('Minecraft', 5),
+('Rocket League', 6),
+('EA FC 25', 6);
+
+INSERT OR IGNORE INTO categories (name) VALUES -- Catégories pour les posts
+('Recherche mate'),
+('Discussion générale'),
+('Aide'),
+('Compétitif'),
+('Détente'),
+('Tournoi');
