@@ -374,6 +374,10 @@ func main() {
         c.HTML(http.StatusOK, "posts.html", gin.H{})
     })
 
+	r.GET("/swipe", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "swipe.html", gin.H{})
+	})
+	
     r.GET("/create-post", func(c *gin.Context) {
         c.HTML(http.StatusOK, "create-post.html", gin.H{})
     })
