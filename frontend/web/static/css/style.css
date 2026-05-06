@@ -249,3 +249,118 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 1.2rem;
   }
+
+/* Bouton + néon dans la navbar */
+.nav-links .nav-plus {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  text-decoration: none;
+  background: radial-gradient(circle at 30% 20%, #2b2b3f, #141421 70%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 0 18px rgba(124, 92, 255, 0.28),
+    0 0 26px rgba(0, 212, 255, 0.24);
+  overflow: visible;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  color: #ffffff;
+}
+
+.nav-links .nav-plus span {
+  position: relative;
+  z-index: 2;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px rgba(0, 212, 255, 0.8),
+    0 0 12px rgba(124, 92, 255, 0.8);
+}
+
+/* Anneau néon fin qui tourne autour */
+.nav-links .nav-plus::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  padding: 2px; /* épaisseur de l'anneau */
+  background: conic-gradient(
+    from 0deg,
+    rgba(0, 212, 255, 0.05),
+    rgba(0, 212, 255, 0.7),
+    rgba(124, 92, 255, 0.85),
+    rgba(255, 79, 216, 0.75),
+    rgba(0, 212, 255, 0.05)
+  );
+  -webkit-mask:
+    radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
+  mask:
+    radial-gradient(farthest-side, transparent calc(100% - 3px), #000 100%);
+  filter: blur(0.5px);
+  opacity: 0.95;
+  z-index: 0;
+  animation: neonRing 3.6s linear infinite;
+}
+
+/* disque central au-dessus de l'anneau */
+.nav-links .nav-plus::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #1b1b2b, #0d0d18 75%);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+/* Hover plus punchy mais contrôlé */
+.nav-links .nav-plus:hover {
+  transform: scale(1.08);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 0 24px rgba(124, 92, 255, 0.4),
+    0 0 34px rgba(0, 212, 255, 0.32),
+    0 0 40px rgba(255, 79, 216, 0.28);
+}
+
+@keyframes neonRing {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.profile-avatar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  box-shadow:
+    0 0 12px rgba(124, 92, 255, 0.35),
+    0 0 24px rgba(0, 212, 255, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-avatar-link:hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 18px rgba(124, 92, 255, 0.45),
+    0 0 30px rgba(0, 212, 255, 0.24);
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid #11111a;
+  background: #1a1a26;
+}
