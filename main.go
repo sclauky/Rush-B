@@ -357,8 +357,8 @@ func main() {
     r.Static("/static", "frontend/web/static")
     r.Static("/uploads", "frontend/web/uploads")
 
-    r.StaticFile("/swipe", "frontend/web/swipe/swipe.html")
-    r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
+    r.StaticFile("/swipe", "/frontend/web/templates/swipe.html")
+    r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
 
     // Pages HTML
     r.GET("/", func(c *gin.Context) {
