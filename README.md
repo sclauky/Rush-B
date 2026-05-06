@@ -52,12 +52,48 @@ Rush-B/
             └── register.html
 ```
 
-## lancement du site
+---
 
-1) Télécharger msys2 depuis ce lien : [https://www.msys2.org/](msys2) et l'installé
-2) Cliquer sur Démarrer et chercher variables d'environnement, cliquer sur "modifier les variables d'environnement système" 
-3) Cliquez sur Variables d'environement
-4) Puis sur PATH dans variable système, puis cliquez sur modifier*
-5) Puis sur nouvelle et ajoutez le chemin d'acces de où msys2 est installé, en général c'est : C:\msys64\ucrt64\bin
+## Lancement du projet avec Docker
 
-go run main.go
+### 1. Prérequis
+
+- Docker Desktop installé et en cours d’exécution (Windows / macOS / Linux) [1][2]
+- Aucune installation manuelle de Go, gcc, SQLite ou MSYS2 n’est nécessaire pour lancer le projet via Docker, car ces dépendances sont intégrées dans l’image construite par le `Dockerfile`. [3][4]
+
+### 2. Construction et lancement
+
+Depuis la **racine du projet** (là où se trouvent `Dockerfile` et `compose.yaml`), exécuter :
+
+```bash
+docker compose up --build
+```
+
+- `--build` force la reconstruction de l’image à partir du `Dockerfile`, ce qui est utile après une modification du code ou de la configuration. [5]
+- Cette commande construit l’image, crée le conteneur et lance l’application avec la configuration définie dans `compose.yaml`. [6][7]
+
+### 3. Accès au site
+
+Une fois le conteneur démarré, le site est accessible depuis la machine hôte à l’adresse suivante :
+
+```text
+http://localhost:8080
+```
+
+Si le port `8080` est publié dans `compose.yaml`, le site peut aussi être ouvert depuis une autre machine du même réseau local avec :
+
+```text
+http://ADRESSE_IP_DE_LA_MACHINE_HOTE:8080
+```
+
+La publication des ports permet de rendre un service du conteneur accessible depuis l’extérieur du conteneur. [8][9]
+
+### 4. Lancement en arrière-plan
+
+Pour démarrer le projet sans bloquer le terminal :
+
+```bash
+docker compose up -d --build
+```
+
+L’option `-d` lance les conteneurs en arrière-plan. [5]
