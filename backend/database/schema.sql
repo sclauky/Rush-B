@@ -117,3 +117,30 @@ CREATE TABLE user_game_types (
   game_type TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+`CREATE TABLE IF NOT EXISTS swipes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			swiper_id INTEGER NOT NULL,
+			target_id INTEGER NOT NULL,
+			direction TEXT NOT NULL CHECK(direction IN ('like','pass')),
+			created_at DATETIME NOT NULL,
+			UNIQUE(swiper_id, target_id),
+			FOREIGN KEY (swiper_id) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS matches (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user1_id INTEGER NOT NULL,
+			user2_id INTEGER NOT NULL,
+			created_at DATETIME NOT NULL,
+			UNIQUE(user1_id, user2_id),
+			FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS user_photos (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			photo_path TEXT NOT NULL,
+			position INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`
