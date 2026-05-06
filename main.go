@@ -358,7 +358,7 @@ func main() {
     r.Static("/static", "frontend/web/static")
     r.Static("/uploads", "frontend/web/uploads")
 
-    r.StaticFile("/swipe", "frontend/web/static/swipe.html")
+    r.StaticFile("/swipe", "frontend/web/swipe/swipe.html")
     r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
 
     // Pages HTML
@@ -374,10 +374,10 @@ func main() {
         c.HTML(http.StatusOK, "posts.html", gin.H{})
     })
 
-	r.GET("/swipe", func(c *gin.Context) {
+	r.GET("/frontend/web/swipe/swipe.html", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
-	
+
     r.GET("/create-post", func(c *gin.Context) {
         c.HTML(http.StatusOK, "create-post.html", gin.H{})
     })
