@@ -373,7 +373,7 @@ func main() {
         c.HTML(http.StatusOK, "posts.html", gin.H{})
     })
 
-	r.GET("/frontend/web/swipe/swipe.html", func(c *gin.Context) {
+	r.GET("/swipe", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
 
