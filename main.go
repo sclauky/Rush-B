@@ -1,333 +1,454 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
+    "database/sql"
+    "fmt"
+    "io"
+    "log"
+    "net/http"
+    "net/url"
+    "os"
+    "path/filepath"
+    "regexp"
+    "strconv"
+    "strings"
+    "time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
+    "github.com/gin-gonic/gin"
+    "github.com/golang-jwt/jwt/v5"
+    "github.com/joho/godotenv"
+    _ "github.com/mattn/go-sqlite3"
 )
 
 var db *sql.DB
 
 type User struct {
-	ID          int      `json:"id"`
-	FirstName   string   `json:"first_name"`
-	LastName    string   `json:"last_name"`
-	Username    string   `json:"username"`
-	Biography   string   `json:"biography"`
-	GameTypes   []string `json:"game_types"`
-	GamesPlayed []string `json:"games_played"`
-	SkillLevel  string   `json:"skill_level"`
-	PlayStyle   string   `json:"play_style"`
-	Photos      []string `json:"photos"`
+    ID        int      `json:"id"`
+    FirstName string   `json:"first_name"`
+    LastName  string   `json:"last_name"`
+    Username  string   `json:"username"`
+    Biography string   `json:"biography"`
+    GameTypes []string `json:"game_types"`
+    GamesPlayed []string `json:"games_played"`
+    SkillLevel string   `json:"skill_level"`
+    PlayStyle  string   `json:"play_style"`
+    Photos     []string `json:"photos"`
 }
 
 type SwipeRequest struct {
-	TargetID  int    `json:"target_id"`
-	Direction string `json:"direction"`
+    TargetID  int    `json:"target_id"`
+    Direction string `json:"direction"`
 }
 
 type MatchResponse struct {
-	Matched bool `json:"matched"`
-	MatchID int  `json:"match_id,omitempty"`
+    Matched bool `json:"matched"`
+    MatchID int  `json:"match_id,omitempty"`
 }
 
 type MatchEntry struct {
-	User      User      `json:"user"`
-	MatchID   int       `json:"match_id"`
-	MatchedAt time.Time `json:"matched_at"`
+    User     User      `json:"user"`
+    MatchID  int       `json:"match_id"`
+    MatchedAt time.Time `json:"matched_at"`
 }
 
+// ===================== AUTH MIDDLEWARES =====================
+
 func authMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var tokenStr string
+    return func(c *gin.Context) {
+        var tokenStr string
 
-		authHeader := c.GetHeader("Authorization")
-		if authHeader != "" {
-			tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-		} else {
-			cookie, err := c.Cookie("session_token")
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-				return
-			}
-			tokenStr = cookie
-		}
+        authHeader := c.GetHeader("Authorization")
+        if authHeader != "" {
+            tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+        } else {
+            cookie, err := c.Cookie("session_token")
+            if err != nil {
+                c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+                return
+            }
+            tokenStr = cookie
+        }
 
-		var userID int
-		var expiresAt time.Time
-		err := db.QueryRow(
-			`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`, tokenStr,
-		).Scan(&userID, &expiresAt)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
-			return
-		}
-		if time.Now().After(expiresAt) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "session expired"})
-			return
-		}
+        var userID int
+        var expiresAt time.Time
+        err := db.QueryRow(
+            `SELECT user_id, expires_at FROM sessions WHERE session_token = ?`, tokenStr,
+        ).Scan(&userID, &expiresAt)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+            return
+        }
+        if time.Now().After(expiresAt) {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "session expired"})
+            return
+        }
 
-		c.Set("userID", userID)
-		c.Next()
-	}
+        c.Set("userID", userID)
+        c.Next()
+    }
 }
 
 func authMiddlewareJWT() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		secret := os.Getenv("JWT_SECRET")
-		tokenStr := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
-		if tokenStr == "" {
-			cookie, err := c.Cookie("session_token")
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-				return
-			}
-			tokenStr = cookie
-		}
+    return func(c *gin.Context) {
+        secret := os.Getenv("JWT_SECRET")
+        tokenStr := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
+        if tokenStr == "" {
+            cookie, err := c.Cookie("session_token")
+            if err != nil {
+                c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+                return
+            }
+            tokenStr = cookie
+        }
 
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return []byte(secret), nil
-		})
-		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			return
-		}
+        token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+            if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, fmt.Errorf("unexpected signing method")
+            }
+            return []byte(secret), nil
+        })
+        if err != nil || !token.Valid {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+            return
+        }
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
-			return
-		}
-		userID := int(claims["user_id"].(float64))
-		c.Set("userID", userID)
-		c.Next()
-	}
+        claims, ok := token.Claims.(jwt.MapClaims)
+        if !ok {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
+            return
+        }
+        userID := int(claims["user_id"].(float64))
+        c.Set("userID", userID)
+        c.Next()
+    }
 }
 
 func currentUserID(c *gin.Context) int {
-	id, _ := c.Get("userID")
-	return id.(int)
+    id, _ := c.Get("userID")
+    return id.(int)
 }
 
+// ===================== STEAM HELPERS =====================
+
+func validateSteamOpenID(values url.Values) error {
+    values.Set("openid.mode", "check_authentication")
+
+    resp, err := http.PostForm("https://steamcommunity.com/openid/login", values)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return err
+    }
+
+    if !strings.Contains(string(body), "is_valid:true") {
+        return fmt.Errorf("openid not valid")
+    }
+
+    return nil
+}
+
+func extractSteamID(claimedID string) (string, error) {
+    // claimed_id ressemble à :
+    // https://steamcommunity.com/openid/id/7656119...
+    re := regexp.MustCompile(`^https?://steamcommunity\.com/openid/id/(\d+)$`)
+    matches := re.FindStringSubmatch(claimedID)
+    if len(matches) != 2 {
+        return "", fmt.Errorf("invalid claimed id")
+    }
+    return matches[1], nil
+}
+
+// ===================== STEAM HANDLERS =====================
+
+func steamLinkHandler(c *gin.Context) {
+    // Protégé par authMiddleware : userID est déjà dans le contexte
+    userID := currentUserID(c)
+    if userID == 0 {
+        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+        return
+    }
+
+    // À adapter si tu as un domaine différent en prod
+    baseURL := os.Getenv("BASE_URL")
+    if baseURL == "" {
+        baseURL = "http://localhost:8080"
+    }
+
+    returnTo := baseURL + "/auth/steam/callback"
+    realm := baseURL
+
+    params := url.Values{}
+    params.Set("openid.ns", "http://specs.openid.net/auth/2.0")
+    params.Set("openid.mode", "checkid_setup")
+    params.Set("openid.return_to", returnTo)
+    params.Set("openid.realm", realm)
+    params.Set("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select")
+    params.Set("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select")
+
+    redirectURL := "https://steamcommunity.com/openid/login?" + params.Encode()
+    c.Redirect(http.StatusFound, redirectURL)
+}
+
+func steamCallbackHandler(c *gin.Context) {
+    userID := currentUserID(c)
+    if userID == 0 {
+        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+        return
+    }
+
+    // On récupère TOUS les paramètres openid.*
+    values := url.Values{}
+    for key, vals := range c.Request.URL.Query() {
+        if strings.HasPrefix(key, "openid.") && len(vals) > 0 {
+            values.Set(key, vals[0])
+        }
+    }
+
+    // Validation auprès de Steam (check_authentication) [web:15][web:13]
+    if err := validateSteamOpenID(values); err != nil {
+        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid steam response"})
+        return
+    }
+
+    claimedID := values.Get("openid.claimed_id")
+    steamID, err := extractSteamID(claimedID)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid steam id"})
+        return
+    }
+
+    // Vérifier si ce steam_id est déjà lié à quelqu'un d'autre
+    var existingUserID int
+    err = db.QueryRow(`SELECT id FROM users WHERE steam_id = ?`, steamID).Scan(&existingUserID)
+    if err == nil && existingUserID != 0 && existingUserID != userID {
+        c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": "steam account already linked"})
+        return
+    }
+
+    // Sauvegarder sur l'utilisateur courant
+    _, err = db.Exec(`UPDATE users SET steam_id = ? WHERE id = ?`, steamID, userID)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+        return
+    }
+
+    // Rediriger vers le profil
+    c.Redirect(http.StatusFound, "/profile")
+}
+
+// ===================== TES HANDLERS EXISTANTS =====================
+
 func getProfiles(c *gin.Context) {
-	userID := currentUserID(c)
+    userID := currentUserID(c)
 
-	rows, err := db.Query(`
-		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
-		FROM users u
-		LEFT JOIN user_preferences up ON up.user_id = u.id
-		WHERE u.id != ?
-		  AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
-		ORDER BY RANDOM()
-		LIMIT 20
-	`, userID, userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
-		return
-	}
-	defer rows.Close()
+    rows, err := db.Query(`
+        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+               COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
+        FROM users u
+        LEFT JOIN user_preferences up ON up.user_id = u.id
+        WHERE u.id != ?
+          AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
+        ORDER BY RANDOM()
+        LIMIT 20
+    `, userID, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+        return
+    }
+    defer rows.Close()
 
-	profiles := []User{}
-	for rows.Next() {
-		var u User
-		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography, &u.SkillLevel, &u.PlayStyle)
-		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
-		u.GamesPlayed = queryStrings(db, `SELECT game_name FROM user_games WHERE user_id = ?`, u.ID)
-		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 6`, u.ID)
-		profiles = append(profiles, u)
-	}
-	c.JSON(http.StatusOK, profiles)
+    profiles := []User{}
+    for rows.Next() {
+        var u User
+        rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography, &u.SkillLevel, &u.PlayStyle)
+        u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+        u.GamesPlayed = queryStrings(db, `SELECT game_name FROM user_games WHERE user_id = ?`, u.ID)
+        u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 6`, u.ID)
+        profiles = append(profiles, u)
+    }
+    c.JSON(http.StatusOK, profiles)
 }
 
 func handleSwipe(c *gin.Context) {
-	userID := currentUserID(c)
+    userID := currentUserID(c)
 
-	var req SwipeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
+    var req SwipeRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+        return
+    }
 
-	_, err := db.Exec(
-		`INSERT OR IGNORE INTO swipes (swiper_id, target_id, direction, created_at) VALUES (?, ?, ?, ?)`,
-		userID, req.TargetID, req.Direction, time.Now(),
-	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
-		return
-	}
+    _, err := db.Exec(
+        `INSERT OR IGNORE INTO swipes (swiper_id, target_id, direction, created_at) VALUES (?, ?, ?, ?)`,
+        userID, req.TargetID, req.Direction, time.Now(),
+    )
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+        return
+    }
 
-	resp := MatchResponse{}
-	if req.Direction == "like" {
-		var reverseID int
-		err := db.QueryRow(
-			`SELECT id FROM swipes WHERE swiper_id = ? AND target_id = ? AND direction = 'like'`,
-			req.TargetID, userID,
-		).Scan(&reverseID)
-		if err == nil {
-			var matchID int
-			err2 := db.QueryRow(
-				`SELECT id FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`,
-				userID, req.TargetID, req.TargetID, userID,
-			).Scan(&matchID)
-			if err2 == sql.ErrNoRows {
-				res, _ := db.Exec(
-					`INSERT INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)`,
-					userID, req.TargetID, time.Now(),
-				)
-				id64, _ := res.LastInsertId()
-				matchID = int(id64)
-			}
-			resp.Matched = true
-			resp.MatchID = matchID
-		}
-	}
-	c.JSON(http.StatusOK, resp)
+    resp := MatchResponse{}
+    if req.Direction == "like" {
+        var reverseID int
+        err := db.QueryRow(
+            `SELECT id FROM swipes WHERE swiper_id = ? AND target_id = ? AND direction = 'like'`,
+            req.TargetID, userID,
+        ).Scan(&reverseID)
+        if err == nil {
+            var matchID int
+            err2 := db.QueryRow(
+                `SELECT id FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`,
+                userID, req.TargetID, req.TargetID, userID,
+            ).Scan(&matchID)
+            if err2 == sql.ErrNoRows {
+                res, _ := db.Exec(
+                    `INSERT INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)`,
+                    userID, req.TargetID, time.Now(),
+                )
+                id64, _ := res.LastInsertId()
+                matchID = int(id64)
+            }
+            resp.Matched = true
+            resp.MatchID = matchID
+        }
+    }
+    c.JSON(http.StatusOK, resp)
 }
 
 func getMatches(c *gin.Context) {
-	userID := currentUserID(c)
+    userID := currentUserID(c)
 
-	rows, err := db.Query(`
-		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
-		FROM matches m
-		JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
-		LEFT JOIN user_preferences up ON up.user_id = u.id
-		WHERE m.user1_id = ? OR m.user2_id = ?
-		ORDER BY m.created_at DESC
-	`, userID, userID, userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
-		return
-	}
-	defer rows.Close()
+    rows, err := db.Query(`
+        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+               COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
+        FROM matches m
+        JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
+        LEFT JOIN user_preferences up ON up.user_id = u.id
+        WHERE m.user1_id = ? OR m.user2_id = ?
+        ORDER BY m.created_at DESC
+    `, userID, userID, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+        return
+    }
+    defer rows.Close()
 
-	matches := []MatchEntry{}
-	for rows.Next() {
-		var u User
-		var me MatchEntry
-		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography,
-			&u.SkillLevel, &u.PlayStyle, &me.MatchID, &me.MatchedAt)
-		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
-		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 1`, u.ID)
-		me.User = u
-		matches = append(matches, me)
-	}
-	c.JSON(http.StatusOK, matches)
+    matches := []MatchEntry{}
+    for rows.Next() {
+        var u User
+        var me MatchEntry
+        rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography,
+            &u.SkillLevel, &u.PlayStyle, &me.MatchID, &me.MatchedAt)
+        u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+        u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 1`, u.ID)
+        me.User = u
+        matches = append(matches, me)
+    }
+    c.JSON(http.StatusOK, matches)
 }
 
 func deleteMatch(c *gin.Context) {
-	userID := currentUserID(c)
-	matchID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
+    userID := currentUserID(c)
+    matchID, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
 
-	var u1, u2 int
-	err = db.QueryRow(`SELECT user1_id, user2_id FROM matches WHERE id = ?`, matchID).Scan(&u1, &u2)
-	if err != nil || (u1 != userID && u2 != userID) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-		return
-	}
+    var u1, u2 int
+    err = db.QueryRow(`SELECT user1_id, user2_id FROM matches WHERE id = ?`, matchID).Scan(&u1, &u2)
+    if err != nil || (u1 != userID && u2 != userID) {
+        c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+        return
+    }
 
-	db.Exec(`DELETE FROM matches WHERE id = ?`, matchID)
-	c.JSON(http.StatusOK, gin.H{"ok": "unmatched"})
+    db.Exec(`DELETE FROM matches WHERE id = ?`, matchID)
+    c.JSON(http.StatusOK, gin.H{"ok": "unmatched"})
 }
 
 func uploadPhoto(c *gin.Context) {
-	userID := currentUserID(c)
+    userID := currentUserID(c)
 
-	var count int
-	db.QueryRow(`SELECT COUNT(*) FROM user_photos WHERE user_id = ?`, userID).Scan(&count)
-	if count >= 6 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "max 6 photos"})
-		return
-	}
+    var count int
+    db.QueryRow(`SELECT COUNT(*) FROM user_photos WHERE user_id = ?`, userID).Scan(&count)
+    if count >= 6 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "max 6 photos"})
+        return
+    }
 
-	file, header, err := c.Request.FormFile("photo")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file"})
-		return
-	}
-	defer file.Close()
+    file, header, err := c.Request.FormFile("photo")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "no file"})
+        return
+    }
+    defer file.Close()
 
-	uploadDir := "frontend/web/uploads/swipe"
-	os.MkdirAll(uploadDir, 0755)
+    uploadDir := "frontend/web/uploads/swipe"
+    os.MkdirAll(uploadDir, 0755)
 
-	filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), header.Filename)
-	dst, err := os.Create(filepath.Join(uploadDir, filename))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
-		return
-	}
-	defer dst.Close()
+    filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), header.Filename)
+    dst, err := os.Create(filepath.Join(uploadDir, filename))
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
+        return
+    }
+    defer dst.Close()
 
-	buf := make([]byte, 10<<20)
-	n, _ := file.Read(buf)
-	dst.Write(buf[:n])
+    buf := make([]byte, 10<<20)
+    n, _ := file.Read(buf)
+    dst.Write(buf[:n])
 
-	photoPath := "/uploads/swipe/" + filename
-	db.Exec(`INSERT INTO user_photos (user_id, photo_path, position) VALUES (?, ?, ?)`,
-		userID, photoPath, count)
+    photoPath := "/uploads/swipe/" + filename
+    db.Exec(`INSERT INTO user_photos (user_id, photo_path, position) VALUES (?, ?, ?)`,
+        userID, photoPath, count)
 
-	c.JSON(http.StatusOK, gin.H{"path": photoPath})
+    c.JSON(http.StatusOK, gin.H{"path": photoPath})
 }
 
 func deletePhoto(c *gin.Context) {
-	userID := currentUserID(c)
-	photoID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
-	db.Exec(`DELETE FROM user_photos WHERE id = ? AND user_id = ?`, photoID, userID)
-	c.JSON(http.StatusOK, gin.H{"ok": "deleted"})
+    userID := currentUserID(c)
+    photoID, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    db.Exec(`DELETE FROM user_photos WHERE id = ? AND user_id = ?`, photoID, userID)
+    c.JSON(http.StatusOK, gin.H{"ok": "deleted"})
 }
 
 func queryStrings(db *sql.DB, query string, args ...interface{}) []string {
-	rows, err := db.Query(query, args...)
-	if err != nil {
-		return []string{}
-	}
-	defer rows.Close()
-	var out []string
-	for rows.Next() {
-		var s string
-		rows.Scan(&s)
-		out = append(out, s)
-	}
-	if out == nil {
-		return []string{}
-	}
-	return out
+    rows, err := db.Query(query, args...)
+    if err != nil {
+        return []string{}
+    }
+    defer rows.Close()
+    var out []string
+    for rows.Next() {
+        var s string
+        rows.Scan(&s)
+        out = append(out, s)
+    }
+    if out == nil {
+        return []string{}
+    }
+    return out
 }
 
 func runMigrationsFromFile(db *sql.DB, filename string) error {
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
+    content, err := os.ReadFile(filename)
+    if err != nil {
+        return err
+    }
 
-	_, err = db.Exec(string(content))
-	return err
+    _, err = db.Exec(string(content))
+    return err
 }
+
+// ===================== MAIN =====================
 
 func main() {
     _ = godotenv.Load()
@@ -345,7 +466,6 @@ func main() {
     if err = db.Ping(); err != nil {
         log.Fatal("Erreur ping DB:", err)
     }
-
 
     if os.Getenv("GIN_MODE") == "release" {
         gin.SetMode(gin.ReleaseMode)
@@ -379,8 +499,16 @@ func main() {
     })
 
     r.GET("/profile", func(c *gin.Context) {
+        // tu peux plus tard passer des infos Steam au template
         c.HTML(http.StatusOK, "profile.html", gin.H{})
     })
+
+    // Routes Steam protégées par auth
+    steamGroup := r.Group("/", authMiddleware())
+    {
+        steamGroup.GET("/account/steam/link", steamLinkHandler)
+        steamGroup.GET("/auth/steam/callback", steamCallbackHandler)
+    }
 
     // API swipe
     api := r.Group("/api/swipe", authMiddleware())

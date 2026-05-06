@@ -58,8 +58,7 @@ Rush-B/
 
 ### 1. Prérequis
 
-- Docker Desktop installé et en cours d’exécution (Windows / macOS / Linux) [1][2]
-- Aucune installation manuelle de Go, gcc, SQLite ou MSYS2 n’est nécessaire pour lancer le projet via Docker, car ces dépendances sont intégrées dans l’image construite par le `Dockerfile`. [3][4]
+- Docker Desktop installé et en cours d’exécution (Windows / macOS / Linux) 
 
 ### 2. Construction et lancement
 
@@ -69,8 +68,8 @@ Depuis la **racine du projet** (là où se trouvent `Dockerfile` et `compose.yam
 docker compose up --build
 ```
 
-- `--build` force la reconstruction de l’image à partir du `Dockerfile`, ce qui est utile après une modification du code ou de la configuration. [5]
-- Cette commande construit l’image, crée le conteneur et lance l’application avec la configuration définie dans `compose.yaml`. [6][7]
+- `--build` force la reconstruction de l’image à partir du `Dockerfile`, ce qui est utile après une modification du code ou de la configuration. 
+- Cette commande construit l’image, crée le conteneur et lance l’application avec la configuration définie dans `compose.yaml`. 
 
 ### 3. Accès au site
 

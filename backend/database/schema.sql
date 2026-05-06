@@ -9,7 +9,8 @@ CREATE TABLE users (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     birth_date DATE,
     biography TEXT,
-    show_in_finder INTEGER NOT NULL DEFAULT 0 CHECK (show_in_finder IN (0, 1))
+    show_in_finder INTEGER NOT NULL DEFAULT 0 CHECK (show_in_finder IN (0, 1)),
+    steam_id TEXT UNIQUE
 );
 
 CREATE TABLE sessions (
