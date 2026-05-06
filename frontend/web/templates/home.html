@@ -23,17 +23,25 @@
 
       <nav class="nav-links" id="mobile-menu">
         <a href="/">Accueil</a>
-        <a href="/posts">Posts</a>
-        <a href="/create-post">Créer</a>
-        <a href="/swipe">Finder</a>
+
+        <a href="/create-post" class="nav-plus" aria-label="Créer un post">
+        <span>+</span>
+        </a>
+
         <a href="/profile">Profil</a>
       </nav>
 
-      <div class="nav-actions">
-        <a href="/login" class="btn btn-secondary">Connexion</a>
-        <button class="btn btn-primary open-register-modal" type="button">
-          Inscription
-        </button>
+            <div class="nav-actions">
+        {{if .IsLoggedIn}}
+          <a href="/profile" class="profile-avatar-link" aria-label="Accéder au profil">
+            <img src="/static/images/default-avatar.png" alt="Photo de profil" class="profile-avatar" />
+          </a>
+        {{else}}
+          <a href="/login" class="btn btn-secondary">Connexion</a>
+          <button class="btn btn-primary open-register-modal" type="button">
+            Inscription
+          </button>
+        {{end}}
       </div>
 
       <button class="menu-toggle" id="menu-toggle">☰</button>
