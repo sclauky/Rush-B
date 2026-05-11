@@ -15,6 +15,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+
+	postHandlers "socialauth/backend/forum/post/handlers"
 )
 
 var db *sql.DB
@@ -330,81 +332,84 @@ func runMigrationsFromFile(db *sql.DB, filename string) error {
 }
 
 func main() {
-    _ = godotenv.Load()
+	_ = godotenv.Load()
 
-    var err error
-    dbPath := os.Getenv("DB_PATH")
-    if dbPath == "" {
-        dbPath = "backend/database/data.db"
-    }
-
-    db, err = sql.Open("sqlite3", dbPath)
-    if err != nil {
-        log.Fatal("Erreur ouverture DB:", err)
-    }
-    if err = db.Ping(); err != nil {
-        log.Fatal("Erreur ping DB:", err)
-    }
-
-	if err := runMigrationsFromFile(db, "backend/database/schema.sql"); err != nil {
-    log.Fatal("Erreur migration DB:", err)
+	var err error
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "backend/database/data.db"
 	}
 
-    if os.Getenv("GIN_MODE") == "release" {
-        gin.SetMode(gin.ReleaseMode)
-    }
+	db, err = sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Fatal("Erreur ouverture DB:", err)
+	}
+	if err = db.Ping(); err != nil {
+		log.Fatal("Erreur ping DB:", err)
+	}
 
-    r := gin.Default()
+	if err := runMigrationsFromFile(db, "backend/database/schema.sql"); err != nil {
+		log.Fatal("Erreur migration DB:", err)
+	}
 
-    // Templates + statiques
-    r.LoadHTMLGlob("frontend/web/templates/*.html")
-    r.Static("/static", "frontend/web/static")
-    r.Static("/uploads", "frontend/web/uploads")
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
-    r.StaticFile("/swipe", "/frontend/web/templates/swipe.html")
-    r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
+	r := gin.Default()
 
-    // Pages HTML
-    r.GET("/", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "home.html", gin.H{})
-    })
+	// Templates + statiques
+	r.LoadHTMLGlob("frontend/web/templates/*.html")
+	r.Static("/static", "frontend/web/static")
+	r.Static("/uploads", "frontend/web/uploads")
 
-    r.GET("/login", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "login.html", gin.H{})
-    })
+	r.StaticFile("/swipe", "/frontend/web/templates/swipe.html")
+	r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
 
-    r.GET("/posts", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "posts.html", gin.H{})
-    })
+	// Pages HTML
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "home.html", gin.H{})
+	})
+
+	r.GET("/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.html", gin.H{})
+	})
+
+	r.GET("/posts", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "feed.html", gin.H{})
+	})
 
 	r.GET("/frontend/web/templates/swipe.html", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
 
-    r.GET("/create-post", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "create-post.html", gin.H{})
-    })
+	r.GET("/frontend/web/templates/feed.html", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "feed.html", gin.H{})
+	})
 
-    r.GET("/profile", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "profile.html", gin.H{})
-    })
+	r.GET("/create-post", postHandlers.ShowCreatePost(db))
+	r.POST("/create-post", postHandlers.SubmitCreatePost(db))
 
-    // API swipe
-    api := r.Group("/api/swipe", authMiddleware())
-    {
-        api.GET("/profiles", getProfiles)
-        api.POST("/action", handleSwipe)
-        api.GET("/matches", getMatches)
-        api.DELETE("/matches/:id", deleteMatch)
-        api.POST("/photos", uploadPhoto)
-        api.DELETE("/photos/:id", deletePhoto)
-    }
+	r.GET("/profile", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "profile.html", gin.H{})
+	})
 
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
+	// API swipe
+	api := r.Group("/api/swipe", authMiddleware())
+	{
+		api.GET("/profiles", getProfiles)
+		api.POST("/action", handleSwipe)
+		api.GET("/matches", getMatches)
+		api.DELETE("/matches/:id", deleteMatch)
+		api.POST("/photos", uploadPhoto)
+		api.DELETE("/photos/:id", deletePhoto)
+	}
 
-    log.Printf("Serveur lancé sur http://localhost:%s", port)
-    log.Fatal(r.Run(":" + port))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Serveur lancé sur http://localhost:%s", port)
+	log.Fatal(r.Run(":" + port))
 }

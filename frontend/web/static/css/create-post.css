@@ -1,0 +1,178 @@
+.create-post-page {
+  padding: 3rem 0 5rem;
+}
+
+.create-post-hero {
+  padding: 2rem 0 1.5rem;
+}
+
+.create-post-hero .section-heading h1 {
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  line-height: 1.05;
+  margin-bottom: 1rem;
+}
+
+.create-post-hero .section-heading p {
+  max-width: 60ch;
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 1.02rem;
+}
+
+.create-post-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.4rem;
+  align-items: start;
+}
+
+.create-post-card,
+.side-card {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 22, 38, 0.96),
+    rgba(14, 14, 25, 0.94)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.create-post-card {
+  padding: 1.5rem;
+}
+
+.create-post-form {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.form-group {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.form-group label {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(9, 9, 15, 0.72);
+  color: var(--text);
+  border-radius: 16px;
+  padding: 0.95rem 1rem;
+  outline: none;
+  transition: 0.25s ease;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 220px;
+  line-height: 1.7;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: rgba(167, 173, 199, 0.72);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: rgba(0, 212, 255, 0.55);
+  box-shadow:
+    0 0 0 3px rgba(0, 212, 255, 0.1),
+    0 0 18px rgba(124, 92, 255, 0.12);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+}
+
+.create-post-submit {
+  min-width: 180px;
+}
+
+.create-post-side {
+  display: grid;
+  gap: 1rem;
+}
+
+.side-card {
+  padding: 1.35rem;
+}
+
+.side-card h2,
+.side-card h3 {
+  margin-bottom: 0.85rem;
+  line-height: 1.2;
+}
+
+.side-card p {
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.tips-list {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.alert {
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.alert-error {
+  background: rgba(255, 79, 216, 0.08);
+  border-color: rgba(255, 79, 216, 0.25);
+  color: #ffb7ec;
+}
+
+.alert-success {
+  background: rgba(87, 242, 135, 0.08);
+  border-color: rgba(87, 242, 135, 0.25);
+  color: #bfffd0;
+}
+
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(
+    circle,
+    rgba(124, 92, 255, 0.18),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+.nav-links .nav-plus.active {
+  transform: scale(1.05);
+}
+
+.nav-links .nav-plus.active::before {
+  opacity: 1;
+}
