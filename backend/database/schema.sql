@@ -148,11 +148,6 @@ CREATE TABLE IF NOT EXISTS user_photos (
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ======================================================================================================================================================================================
-
--- Ajout des infos de bases à mettre dans la database (jeux, catégories)
--- Le INSERT OR IGNORE permet de ne pas insérer les données si elles existent déjà pour éviter de faire crash la db. 
-
 INSERT OR IGNORE INTO game_types (name) VALUES
 ('FPS'),
 ('MOBA'),

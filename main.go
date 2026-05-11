@@ -346,6 +346,10 @@ func main() {
         log.Fatal("Erreur ping DB:", err)
     }
 
+	if err := runMigrationsFromFile(db, "backend/database/schema.sql"); err != nil {
+    log.Fatal("Erreur migration DB:", err)
+	}
+
     if os.Getenv("GIN_MODE") == "release" {
         gin.SetMode(gin.ReleaseMode)
     }
