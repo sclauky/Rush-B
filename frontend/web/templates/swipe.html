@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/frontend/web/swipe/swipe.css" />
-    <link rel="script" href="/frontend/web/swipe/swipe.js" />
+    <link rel="stylesheet" href="/static/css/swipe.css" />
+    <script src="/static/js/swipe.js"></script>
+
 </head>
 <body>
   <div class="site-bg"></div>
@@ -16,15 +17,15 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-inner">
-      <a href="/" class="logo">
+      <a href="/frontend/web/templates/home.html" class="logo">
         <div class="logo-mark">B</div>
         <span class="logo-text">Rush-B</span>
       </a>
       <div class="nav-links">
-        <a href="/frontend/index.html">Accueil</a>
-        <a href="/frontend/posts.html">Posts</a>
-        <a href="/frontend/web/templates/" class="active">Finder</a>
-        <a href="/frontend/web/profile/profile.html">Profil</a>
+        <a href="/frontend/web/templates/home.html">Accueil</a>
+        <a href="/frontend/web/templates/posts.html">Posts</a>
+        <a href="/frontend/web/templates/swipe.html" class="active">Finder</a>
+        <a href="/templates/profile.html">Profil</a>
       </div>
       <div class="nav-actions">
         <button class="btn btn-primary" id="btn-logout">Déconnexion</button>
