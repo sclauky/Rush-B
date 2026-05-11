@@ -1,22 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RUSH-B | Accueil</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
-  <link rel="stylesheet" href="/static/css/components.css" />
-  <link rel="stylesheet" href="/static/css/responsive.css" />
-</head>
-<body>
-  <div class="site-bg"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RUSH-B | Accueil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/components.css" />
+    <link rel="stylesheet" href="/static/css/responsive.css" />
+  </head>
+  <body>
+    <div class="site-bg"></div>
 
   <header class="navbar">
     <div class="container nav-inner">
-      <a href="/" class="logo">
+      <a href="/frontend/web/templates/home.html" class="logo">
         <span class="logo-mark">R</span>
         <span class="logo-text">RUSH-B</span>
       </a>
@@ -27,367 +30,299 @@
         <a href="/create-post" class="nav-plus" aria-label="Créer un post">
         <span>+</span>
         </a>
-
-        <a href="/frontend/web/swipe/swipe.html">Finder</a>
-
-        <a href="/profile">Profil</a>
+        <a href="/frontend/web/templates/swipe.html">Finder</a>
       </nav>
 
-            <div class="nav-actions">
-        {{if .IsLoggedIn}}
-          <a href="/profile" class="profile-avatar-link" aria-label="Accéder au profil">
-            <img src="/static/images/default-avatar.png" alt="Photo de profil" class="profile-avatar" />
+        <div class="nav-actions">
+          {{if .IsLoggedIn}}
+          <a
+            href="/profile"
+            class="profile-avatar-link"
+            aria-label="Accéder au profil"
+          >
+            <img
+              src="/static/images/default-avatar.png"
+              alt="Photo de profil"
+              class="profile-avatar"
+            />
           </a>
-        {{else}}
+          {{else}}
           <a href="/login" class="btn btn-secondary">Connexion</a>
           <button class="btn btn-primary open-register-modal" type="button">
             Inscription
           </button>
-        {{end}}
-      </div>
-
-      <button class="menu-toggle" id="menu-toggle">☰</button>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-content">
-          <span class="eyebrow">Le forum où les squads se forment</span>
-          <h1>Le matchmaking t’a trahi. </h1>
-          <h1>Nous non.</h1>
-
-          <p>
-            Un forum pensé pour les joueurs qui veulent rencontrer du monde,
-            organiser des parties, partager des astuces et discuter de leurs jeux préférés.
-          </p>
-          <div class="hero-actions">
-            <button class="btn btn-primary open-register-modal" type="button">
-              Commencer
-            </button>
-            <a href="/posts" class="btn btn-ghost">Explorer les posts</a>
-          </div>
-
-          <div class="hero-stats">
-            <div class="stat-card">
-              <strong>120+</strong>
-              <span>joueurs actifs</span>
-            </div>
-            <div class="stat-card">
-              <strong>35</strong>
-              <span>squads formés</span>
-            </div>
-            <div class="stat-card">
-              <strong>8</strong>
-              <span>jeux populaires</span>
-            </div>
-          </div>
+          {{end}}
         </div>
 
-        <div class="hero-panel">
-          <div class="panel-glow"></div>
-          <div class="featured-post">
-            <span class="live-badge">Live party finder</span>
-            <h3>Recherche mates Valorant ranked ce soir</h3>
-            <p>Silver / Gold, vocal Discord, chill mais sérieux. On joue vers 21h.</p>
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+      </div>
+    </header>
 
-            <div class="tag-row">
-              <span class="tag">Valorant</span>
-              <span class="tag">PC</span>
-              <span class="tag">Ranked</span>
-              <span class="tag">Vocal</span>
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-content">
+            <span class="eyebrow">Le forum où les squads se forment</span>
+            <h1>Le matchmaking t’a trahi.</h1>
+            <h1>Nous non.</h1>
+
+            <p>
+              Un forum pensé pour les joueurs qui veulent rencontrer du monde,
+              organiser des parties, partager des astuces et discuter de leurs
+              jeux préférés.
+            </p>
+            <div class="hero-actions">
+              <button class="btn btn-primary open-register-modal" type="button">
+                Commencer
+              </button>
+              <a href="/posts" class="btn btn-ghost">Explorer les posts</a>
             </div>
 
-            <div class="post-meta">
-              <span>Par NeoRush</span>
-              <span>24 likes</span>
-              <span>12 commentaires</span>
+            <div class="hero-stats">
+              <div class="stat-card">
+                <strong>...</strong>
+                <span>joueurs actifs</span>
+              </div>
+              <div class="stat-card">
+                <strong>...</strong>
+                <span>squads formés</span>
+              </div>
+              <div class="stat-card">
+                <strong>...</strong>
+                <span>jeux populaires</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-panel">
+            <div class="panel-glow"></div>
+              <div class="post-meta"></div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="categories-section">
-      <div class="container">
-        <div class="section-heading">
-          <span class="section-label">Catégories</span>
-          <h2>Choisis ton univers</h2>
+      <section class="categories-section">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-label">Post</span>
+            <h2>Découvre les posts</h2>
+          </div>
         </div>
+      </section>
+    </main>
 
-        <div class="categories-grid">
-          <article class="category-card">
-            <h3>FPS</h3>
-            <p>Valorant, CS2, Overwatch, R6.</p>
-          </article>
-          <article class="category-card">
-            <h3>Sandbox</h3>
-            <p>Minecraft, builds, serveurs, survie.</p>
-          </article>
-          <article class="category-card">
-            <h3>MOBA</h3>
-            <p>LoL, Dota, stratégie et ranked.</p>
-          </article>
-          <article class="category-card">
-            <h3>Rocket League</h3>
-            <p>Duo, trio, ranked et clips.</p>
-          </article>
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
+        <div class="footer-links">
+          <a href="#top">Accueil</a>
         </div>
       </div>
-    </section>
+    </footer>
 
-    <section class="posts-preview">
-      <div class="container">
-        <div class="section-heading">
-          <span class="section-label">Tendance</span>
-          <h2>Posts populaires</h2>
+    <!-- Modal d'inscription -->
+    <div class="modal-overlay" id="registerModal" aria-hidden="true">
+      <div
+        class="modal-dialog register-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="registerModalTitle"
+      >
+        <button
+          class="modal-close"
+          id="closeRegisterModal"
+          type="button"
+          aria-label="Fermer"
+        >
+          ×
+        </button>
+
+        <div class="modal-header">
+          <span class="section-label">Inscription</span>
+          <h2 id="registerModalTitle">Créer un compte</h2>
+          <p>Rejoins RUSH-B et commence à trouver de vrais mates.</p>
         </div>
 
-        <div class="filter-bar">
-          <button class="filter-chip active">Tous</button>
-          <button class="filter-chip">FPS</button>
-          <button class="filter-chip">Co-op</button>
-          <button class="filter-chip">Ranked</button>
-          <button class="filter-chip">LFG</button>
+        <form class="auth-form" action="/register" method="POST">
+          <div class="form-group">
+            <label for="register-username">Nom d’utilisateur</label>
+            <input
+              type="text"
+              id="register-username"
+              name="username"
+              placeholder="Ton pseudo"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-email">Adresse e-mail</label>
+            <input
+              type="email"
+              id="register-email"
+              name="email"
+              placeholder="exemple@mail.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-password">Mot de passe</label>
+            <input
+              type="password"
+              id="register-password"
+              name="password"
+              placeholder="Choisis un mot de passe"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-confirm-password"
+              >Confirmer le mot de passe</label
+            >
+            <input
+              type="password"
+              id="register-confirm-password"
+              name="confirm_password"
+              placeholder="Retape ton mot de passe"
+              required
+            />
+          </div>
+
+          <label class="checkbox-row terms-row">
+            <input type="checkbox" required />
+            <span>J’accepte les conditions d’utilisation du forum.</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary auth-submit">
+            Créer mon compte
+          </button>
+        </form>
+
+        <div class="auth-divider">
+          <span>ou</span>
         </div>
 
-        <div class="posts-grid">
-          <article class="post-card">
-            <div class="post-top">
-              <span class="user-badge">AceHunter</span>
-              <span class="time">Il y a 2h</span>
-            </div>
-            <h3>Besoin d’un mate CS2 pour grind ce soir</h3>
-            <p>Je cherche quelqu’un de calme avec micro pour MM ou Faceit.</p>
-            <div class="tag-row">
-              <span class="tag">CS2</span>
-              <span class="tag">PC</span>
-              <span class="tag">Ranked</span>
-            </div>
-            <div class="post-bottom">
-              <span>18 likes</span>
-              <span>7 commentaires</span>
-            </div>
-          </article>
-
-          <article class="post-card">
-            <div class="post-top">
-              <span class="user-badge">BlockQueen</span>
-              <span class="time">Il y a 5h</span>
-            </div>
-            <h3>Qui veut commencer un serveur Minecraft moddé ?</h3>
-            <p>Projet chill, survie + build, ouvert aux débutants motivés.</p>
-            <div class="tag-row">
-              <span class="tag">Minecraft</span>
-              <span class="tag">Sandbox</span>
-              <span class="tag">Co-op</span>
-            </div>
-            <div class="post-bottom">
-              <span>31 likes</span>
-              <span>14 commentaires</span>
-            </div>
-          </article>
-
-          <article class="post-card">
-            <div class="post-top">
-              <span class="user-badge">AerialFox</span>
-              <span class="time">Il y a 1j</span>
-            </div>
-            <h3>Team Rocket League pour progresser ensemble</h3>
-            <p>Je cherche des joueurs réguliers pour monter et revoir les rotations.</p>
-            <div class="tag-row">
-              <span class="tag">Rocket League</span>
-              <span class="tag">Ranked</span>
-              <span class="tag">Team</span>
-            </div>
-            <div class="post-bottom">
-              <span>22 likes</span>
-              <span>9 commentaires</span>
-            </div>
-          </article>
+        <div class="auth-alt-actions">
+          <button class="btn btn-secondary auth-alt-btn" type="button">
+            S’inscrire avec Google
+          </button>
+          <button class="btn btn-secondary auth-alt-btn" type="button">
+            S’inscrire avec GitHub
+          </button>
         </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer-inner">
-      <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
-      <div class="footer-links">
-        <a href="/">Accueil</a>
-        <a href="/posts">Explorer</a>
-        <button class="text-link open-register-modal" type="button">Rejoindre</button>
       </div>
     </div>
-  </footer>
 
-  <!-- Modal d'inscription -->
-  <div class="modal-overlay" id="registerModal" aria-hidden="true">
-    <div class="modal-dialog register-modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
-      <button class="modal-close" id="closeRegisterModal" type="button" aria-label="Fermer">
-        ×
-      </button>
-
-      <div class="modal-header">
-        <span class="section-label">Inscription</span>
-        <h2 id="registerModalTitle">Créer un compte</h2>
-        <p>Rejoins RUSH-B et commence à trouver de vrais mates.</p>
-      </div>
-
-      <form class="auth-form" action="/register" method="POST">
-        <div class="form-group">
-          <label for="register-username">Nom d’utilisateur</label>
-          <input
-            type="text"
-            id="register-username"
-            name="username"
-            placeholder="Ton pseudo"
-            required
-          />
+    <div
+      class="modal-overlay {{if .ShowOnboarding}}is-open{{end}}"
+      id="onboardingModal"
+      aria-hidden="{{if .ShowOnboarding}}false{{else}}true{{end}}"
+    >
+      <div
+        class="modal-dialog onboarding-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboardingTitle"
+      >
+        <div class="modal-header">
+          <span class="section-label">Première connexion</span>
+          <h2 id="onboardingTitle">Personnalise ton feed</h2>
+          <p>Choisis tes préférences pour voir les posts les plus adaptés.</p>
         </div>
 
-        <div class="form-group">
-          <label for="register-email">Adresse e-mail</label>
-          <input
-            type="email"
-            id="register-email"
-            name="email"
-            placeholder="exemple@mail.com"
-            required
-          />
-        </div>
+        <form class="auth-form" action="/onboarding" method="POST">
+          <div class="form-group">
+            <label for="games_played">Jeux joués</label>
+            <input
+              type="text"
+              id="games_played"
+              name="games_played"
+              placeholder="Ex : Valorant, CS2, Minecraft"
+              required
+            />
+          </div>
 
-        <div class="form-group">
-          <label for="register-password">Mot de passe</label>
-          <input
-            type="password"
-            id="register-password"
-            name="password"
-            placeholder="Choisis un mot de passe"
-            required
-          />
-        </div>
+          <div class="form-group">
+            <label>Loisir ou compétition</label>
+            <div class="choice-row">
+              <label class="choice-pill">
+                <input type="radio" name="play_style" value="loisir" required />
+                <span>Loisir</span>
+              </label>
+              <label class="choice-pill">
+                <input
+                  type="radio"
+                  name="play_style"
+                  value="competition"
+                  required
+                />
+                <span>Compétition</span>
+              </label>
+            </div>
+          </div>
 
-        <div class="form-group">
-          <label for="register-confirm-password">Confirmer le mot de passe</label>
-          <input
-            type="password"
-            id="register-confirm-password"
-            name="confirm_password"
-            placeholder="Retape ton mot de passe"
-            required
-          />
-        </div>
+          <div class="form-group">
+            <label for="game_types">Type de jeux</label>
+            <select id="game_types" name="game_types" required>
+              <option value="">Choisir un type de jeu</option>
+              <option value="fps">FPS</option>
+              <option value="moba">MOBA</option>
+              <option value="sandbox">Sandbox</option>
+              <option value="co-op">Co-op</option>
+              <option value="rpg">RPG</option>
+              <option value="mmorpg">MMORPG</option>
+              <option value="battle-royale">Battle Royale</option>
+              <option value="ranked">Ranked</option>
+              <option value="simulation">Simulation</option>
+              <option value="survival">Survival</option>
+            </select>
+          </div>
 
-        <label class="checkbox-row terms-row">
-          <input type="checkbox" required />
-          <span>J’accepte les conditions d’utilisation du forum.</span>
-        </label>
+          <div class="form-group">
+            <label>Tu cherches des mates ?</label>
+            <div class="choice-row">
+              <label class="choice-pill">
+                <input
+                  type="radio"
+                  name="looking_for_mates"
+                  value="1"
+                  required
+                />
+                <span>Oui</span>
+              </label>
+              <label class="choice-pill">
+                <input
+                  type="radio"
+                  name="looking_for_mates"
+                  value="0"
+                  required
+                />
+                <span>Non</span>
+              </label>
+            </div>
+          </div>
 
-        <button type="submit" class="btn btn-primary auth-submit">
-          Créer mon compte
-        </button>
-      </form>
+          <div class="form-group">
+            <label for="skill_level">Ton niveau</label>
+            <select id="skill_level" name="skill_level" required>
+              <option value="">Choisir un niveau</option>
+              <option value="debutant">Débutant</option>
+              <option value="intermediaire">Intermédiaire</option>
+              <option value="avance">Avancé</option>
+              <option value="competitif">Compétitif</option>
+            </select>
+          </div>
 
-      <div class="auth-divider">
-        <span>ou</span>
-      </div>
-
-      <div class="auth-alt-actions">
-        <button class="btn btn-secondary auth-alt-btn" type="button">
-          S’inscrire avec Google
-        </button>
-        <button class="btn btn-secondary auth-alt-btn" type="button">
-          S’inscrire avec GitHub
-        </button>
+          <button type="submit" class="btn btn-primary auth-submit">
+            Valider mes préférences
+          </button>
+        </form>
       </div>
     </div>
-  </div>
 
-  <div class="modal-overlay {{if .ShowOnboarding}}is-open{{end}}" id="onboardingModal" aria-hidden="{{if .ShowOnboarding}}false{{else}}true{{end}}">
-    <div class="modal-dialog onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
-      <div class="modal-header">
-        <span class="section-label">Première connexion</span>
-        <h2 id="onboardingTitle">Personnalise ton feed</h2>
-        <p>Choisis tes préférences pour voir les posts les plus adaptés.</p>
-      </div>
-  
-      <form class="auth-form" action="/onboarding" method="POST">
-        <div class="form-group">
-          <label for="games_played">Jeux joués</label>
-          <input
-            type="text"
-            id="games_played"
-            name="games_played"
-            placeholder="Ex : Valorant, CS2, Minecraft"
-            required
-          />
-        </div>
-  
-        <div class="form-group">
-          <label>Loisir ou compétition</label>
-          <div class="choice-row">
-            <label class="choice-pill">
-              <input type="radio" name="play_style" value="loisir" required>
-              <span>Loisir</span>
-            </label>
-            <label class="choice-pill">
-              <input type="radio" name="play_style" value="competition" required>
-              <span>Compétition</span>
-            </label>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="game_types">Type de jeux</label>
-          <select id="game_types" name="game_types" required>
-            <option value="">Choisir un type de jeu</option>
-            <option value="fps">FPS</option>
-            <option value="moba">MOBA</option>
-            <option value="sandbox">Sandbox</option>
-            <option value="co-op">Co-op</option>
-            <option value="rpg">RPG</option>
-            <option value="mmorpg">MMORPG</option>
-            <option value="battle-royale">Battle Royale</option>
-            <option value="ranked">Ranked</option>
-            <option value="simulation">Simulation</option>
-            <option value="survival">Survival</option>
-          </select>
-        </div>
-  
-        <div class="form-group">
-          <label>Tu cherches des mates ?</label>
-          <div class="choice-row">
-            <label class="choice-pill">
-              <input type="radio" name="looking_for_mates" value="1" required>
-              <span>Oui</span>
-            </label>
-            <label class="choice-pill">
-              <input type="radio" name="looking_for_mates" value="0" required>
-              <span>Non</span>
-            </label>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="skill_level">Ton niveau</label>
-          <select id="skill_level" name="skill_level" required>
-            <option value="">Choisir un niveau</option>
-            <option value="debutant">Débutant</option>
-            <option value="intermediaire">Intermédiaire</option>
-            <option value="avance">Avancé</option>
-            <option value="competitif">Compétitif</option>
-          </select>
-        </div>
-  
-        <button type="submit" class="btn btn-primary auth-submit">
-          Valider mes préférences
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <script src="/static/js/main.js"></script>
-</body>
+    <script src="/static/js/main.js"></script>
+  </body>
 </html>

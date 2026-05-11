@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE users (
     show_in_finder INTEGER NOT NULL DEFAULT 0 CHECK (show_in_finder IN (0, 1))
 );
 
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
     session_token TEXT NOT NULL UNIQUE,
@@ -21,24 +21,24 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE game_types (
+CREATE TABLE IF NOT EXISTS game_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE games (
+CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     game_type_id INTEGER NOT NULL,
     FOREIGN KEY (game_type_id) REFERENCES game_types(id) ON DELETE CASCADE
 );
 
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     game_id INTEGER NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE posts (
     FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
 );
 
-CREATE TABLE post_categories (
+CREATE TABLE IF NOT EXISTS post_categories (
     post_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     PRIMARY KEY (post_id, category_id),
@@ -60,7 +60,7 @@ CREATE TABLE post_categories (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
-CREATE TABLE comments (
+CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE comments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE post_reactions (
+CREATE TABLE IF NOT EXISTS post_reactions (
     post_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     reaction_type TEXT NOT NULL CHECK (reaction_type IN ('like', 'dislike')),
@@ -81,7 +81,7 @@ CREATE TABLE post_reactions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE comment_reactions (
+CREATE TABLE IF NOT EXISTS comment_reactions (
     comment_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     reaction_type TEXT NOT NULL CHECK (reaction_type IN ('like', 'dislike')),
@@ -91,7 +91,7 @@ CREATE TABLE comment_reactions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE user_preferences (
+CREATE TABLE IF NOT EXISTS user_preferences (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
     games_played TEXT NOT NULL,
@@ -105,14 +105,14 @@ CREATE TABLE user_preferences (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE user_games (
+CREATE TABLE IF NOT EXISTS user_games (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   game_name TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE user_game_types (
+CREATE TABLE IF NOT EXISTS user_game_types (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   game_type TEXT NOT NULL,
@@ -147,11 +147,6 @@ CREATE TABLE IF NOT EXISTS user_photos (
 	position INTEGER NOT NULL DEFAULT 0,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
--- ======================================================================================================================================================================================
-
--- Ajout des infos de bases à mettre dans la database (jeux, catégories)
--- Le INSERT OR IGNORE permet de ne pas insérer les données si elles existent déjà pour éviter de faire crash la db. 
 
 INSERT OR IGNORE INTO game_types (name) VALUES
 ('FPS'),
