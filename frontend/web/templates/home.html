@@ -237,6 +237,28 @@
 
       <form class="auth-form" action="/register" method="POST">
         <div class="form-group">
+          <label for="register-first-name">Prénom</label>
+          <input
+            type="text"
+            id="register-first-name"
+            name="first_name"
+            placeholder="Ton prénom"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="register-last-name">Nom</label>
+          <input
+            type="text"
+            id="register-last-name"
+            name="last_name"
+            placeholder="Ton nom"
+            required
+          />
+        </div>
+
+        <div class="form-group">
           <label for="register-username">Nom d’utilisateur</label>
           <input
             type="text"

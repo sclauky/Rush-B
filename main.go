@@ -13,6 +13,7 @@ import (
     "strconv"
     "strings"
     "time"
+	"socialauth/backend/forum/auth/utils"
 
     "github.com/gin-gonic/gin"
     "github.com/golang-jwt/jwt/v5"
@@ -23,12 +24,12 @@ import (
 var db *sql.DB
 
 type User struct {
-    ID        int      `json:"id"`
-    FirstName string   `json:"first_name"`
-    LastName  string   `json:"last_name"`
-    Username  string   `json:"username"`
-    Biography string   `json:"biography"`
-    GameTypes []string `json:"game_types"`
+    ID         int      `json:"id"`
+    FirstName  string   `json:"first_name"`
+    LastName   string   `json:"last_name"`
+    Username   string   `json:"username"`
+    Biography  string   `json:"biography"`
+    GameTypes  []string `json:"game_types"`
     GamesPlayed []string `json:"games_played"`
     SkillLevel string   `json:"skill_level"`
     PlayStyle  string   `json:"play_style"`
@@ -46,12 +47,10 @@ type MatchResponse struct {
 }
 
 type MatchEntry struct {
-    User     User      `json:"user"`
-    MatchID  int       `json:"match_id"`
+    User      User      `json:"user"`
+    MatchID   int       `json:"match_id"`
     MatchedAt time.Time `json:"matched_at"`
 }
-
-// ===================== AUTH MIDDLEWARES =====================
 
 func authMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
@@ -128,8 +127,6 @@ func currentUserID(c *gin.Context) int {
     return id.(int)
 }
 
-// ===================== STEAM HELPERS =====================
-
 func validateSteamOpenID(values url.Values) error {
     values.Set("openid.mode", "check_authentication")
 
@@ -152,8 +149,6 @@ func validateSteamOpenID(values url.Values) error {
 }
 
 func extractSteamID(claimedID string) (string, error) {
-    // claimed_id ressemble à :
-    // https://steamcommunity.com/openid/id/7656119...
     re := regexp.MustCompile(`^https?://steamcommunity\.com/openid/id/(\d+)$`)
     matches := re.FindStringSubmatch(claimedID)
     if len(matches) != 2 {
@@ -162,17 +157,13 @@ func extractSteamID(claimedID string) (string, error) {
     return matches[1], nil
 }
 
-// ===================== STEAM HANDLERS =====================
-
 func steamLinkHandler(c *gin.Context) {
-    // Protégé par authMiddleware : userID est déjà dans le contexte
     userID := currentUserID(c)
     if userID == 0 {
         c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
         return
     }
 
-    // À adapter si tu as un domaine différent en prod
     baseURL := os.Getenv("BASE_URL")
     if baseURL == "" {
         baseURL = "http://localhost:8080"
@@ -200,7 +191,6 @@ func steamCallbackHandler(c *gin.Context) {
         return
     }
 
-    // On récupère TOUS les paramètres openid.*
     values := url.Values{}
     for key, vals := range c.Request.URL.Query() {
         if strings.HasPrefix(key, "openid.") && len(vals) > 0 {
@@ -208,7 +198,6 @@ func steamCallbackHandler(c *gin.Context) {
         }
     }
 
-    // Validation auprès de Steam (check_authentication) [web:15][web:13]
     if err := validateSteamOpenID(values); err != nil {
         c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid steam response"})
         return
@@ -221,7 +210,6 @@ func steamCallbackHandler(c *gin.Context) {
         return
     }
 
-    // Vérifier si ce steam_id est déjà lié à quelqu'un d'autre
     var existingUserID int
     err = db.QueryRow(`SELECT id FROM users WHERE steam_id = ?`, steamID).Scan(&existingUserID)
     if err == nil && existingUserID != 0 && existingUserID != userID {
@@ -229,18 +217,14 @@ func steamCallbackHandler(c *gin.Context) {
         return
     }
 
-    // Sauvegarder sur l'utilisateur courant
     _, err = db.Exec(`UPDATE users SET steam_id = ? WHERE id = ?`, steamID, userID)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "db error"})
         return
     }
 
-    // Rediriger vers le profil
     c.Redirect(http.StatusFound, "/profile")
 }
-
-// ===================== TES HANDLERS EXISTANTS =====================
 
 func getProfiles(c *gin.Context) {
     userID := currentUserID(c)
@@ -448,7 +432,92 @@ func runMigrationsFromFile(db *sql.DB, filename string) error {
     return err
 }
 
-// ===================== MAIN =====================
+func registerHandler(c *gin.Context) {
+    username := strings.TrimSpace(c.PostForm("username"))
+    firstName := strings.TrimSpace(c.PostForm("first_name"))
+    lastName := strings.TrimSpace(c.PostForm("last_name"))
+    email := strings.TrimSpace(c.PostForm("email"))
+    password := c.PostForm("password")
+    confirmPassword := c.PostForm("confirm_password")
+
+    if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
+        c.HTML(http.StatusBadRequest, "home.html", gin.H{
+            "Error": "Tous les champs sont obligatoires",
+        })
+        return
+    }
+
+    if password != confirmPassword {
+        c.HTML(http.StatusBadRequest, "home.html", gin.H{
+            "Error": "Les mots de passe ne correspondent pas",
+        })
+        return
+    }
+
+    hashedPassword, err := utils.HashPassword(password)
+    if err != nil {
+        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+        return
+    }
+
+    _, err = db.Exec(`
+        INSERT INTO users (first_name, last_name, email, username, password_hash)
+        VALUES (?, ?, ?, ?, ?)
+    `, firstName, lastName, email, username, hashedPassword)
+    if err != nil {
+        c.HTML(http.StatusBadRequest, "home.html", gin.H{
+            "Error": "Impossible de créer le compte",
+        })
+        return
+    }
+
+    c.Redirect(http.StatusFound, "/login")
+}
+
+func loginHandler(c *gin.Context) {
+    email := strings.TrimSpace(c.PostForm("email"))
+    password := c.PostForm("password")
+
+    if email == "" || password == "" {
+        c.HTML(http.StatusBadRequest, "login.html", gin.H{
+            "Error": "Email et mot de passe obligatoires",
+        })
+        return
+    }
+
+    var userID int
+    var passwordHash string
+
+    err := db.QueryRow(`SELECT id, password_hash FROM users WHERE email = ?`, email).Scan(&userID, &passwordHash)
+    if err != nil {
+        c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+            "Error": "Identifiants invalides",
+        })
+        return
+    }
+
+    if !utils.CheckPassword(password, passwordHash) {
+        c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+            "Error": "Identifiants invalides",
+        })
+        return
+    }
+
+    sessionToken := fmt.Sprintf("%d_%d", userID, time.Now().UnixNano())
+    expiresAt := time.Now().Add(24 * time.Hour)
+
+    _, err = db.Exec(
+        `INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)`,
+        userID, sessionToken, expiresAt,
+    )
+    if err != nil {
+        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+        return
+    }
+
+    c.SetCookie("session_token", sessionToken, 86400, "/", "", false, true)
+    c.Redirect(http.StatusFound, "/profile")
+}
 
 func main() {
     _ = godotenv.Load()
@@ -467,13 +536,16 @@ func main() {
         log.Fatal("Erreur ping DB:", err)
     }
 
+    if err := runMigrationsFromFile(db, "backend/database/schema.sql"); err != nil {
+        log.Fatal("Erreur migrations:", err)
+    }
+
     if os.Getenv("GIN_MODE") == "release" {
         gin.SetMode(gin.ReleaseMode)
     }
 
     r := gin.Default()
 
-    // Templates + statiques
     r.LoadHTMLGlob("frontend/web/templates/*.html")
     r.Static("/static", "frontend/web/static")
     r.Static("/uploads", "frontend/web/uploads")
@@ -481,14 +553,21 @@ func main() {
     r.StaticFile("/swipe", "frontend/web/static/swipe.html")
     r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
 
-    // Pages HTML
     r.GET("/", func(c *gin.Context) {
         c.HTML(http.StatusOK, "home.html", gin.H{})
     })
 
     r.GET("/login", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "login.html", gin.H{})
-    })
+		c.HTML(http.StatusOK, "login.html", gin.H{})
+	})
+
+	r.POST("/login", loginHandler)
+
+    r.GET("/register", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "register.html", gin.H{})
+	})
+
+	r.POST("/register", registerHandler)
 
     r.GET("/posts", func(c *gin.Context) {
         c.HTML(http.StatusOK, "posts.html", gin.H{})
@@ -499,18 +578,19 @@ func main() {
     })
 
     r.GET("/profile", func(c *gin.Context) {
-        // tu peux plus tard passer des infos Steam au template
-        c.HTML(http.StatusOK, "profile.html", gin.H{})
+		c.HTML(http.StatusOK, "profile.html", gin.H{})
+	})
+
+    r.NoRoute(func(c *gin.Context) {
+        c.HTML(http.StatusNotFound, "404.html", gin.H{})
     })
 
-    // Routes Steam protégées par auth
     steamGroup := r.Group("/", authMiddleware())
     {
         steamGroup.GET("/account/steam/link", steamLinkHandler)
         steamGroup.GET("/auth/steam/callback", steamCallbackHandler)
     }
 
-    // API swipe
     api := r.Group("/api/swipe", authMiddleware())
     {
         api.GET("/profiles", getProfiles)
