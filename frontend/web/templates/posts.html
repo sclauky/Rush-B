@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RUSH-B | Feed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/components.css" />
+    <link rel="stylesheet" href="/static/css/responsive.css" />
+  </head>
+  <body>
+    <div class="site-bg"></div>
+
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a href="/" class="logo">
+          <span class="logo-mark">R</span>
+          <span class="logo-text">RUSH-B</span>
+        </a>
+
+        <nav class="nav-links" id="mobile-menu">
+          <a href="/">Accueil</a>
+          <a href="/feed" class="active">Feed</a>
+          <a href="/create-post" class="nav-plus" aria-label="Créer un post">
+            <span>+</span>
+          </a>
+          <a href="/profile">Profil</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="/login" class="btn btn-secondary">Connexion</a>
+          <a href="/register" class="btn btn-primary">Inscription</a>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+      </div>
+    </header>
+
+    <main class="feed-page">
+      <section class="page-hero">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-label">Feed</span>
+            <h2>Les derniers posts publiés</h2>
+            <p>
+              Découvre les annonces de la communauté. Tu peux cliquer sur un
+              post pour voir tous les détails.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="feed-section">
+        <div class="container">
+          <div class="filter-bar">
+            <button class="btn btn-secondary">Tout</button>
+            <button class="btn btn-ghost">FPS</button>
+            <button class="btn btn-ghost">MOBA</button>
+            <button class="btn btn-ghost">Carte</button>
+            <button class="btn btn-ghost">Co-op</button>
+          </div>
+
+          <div class="posts-grid">
+            <article class="post-card">
+              <div class="post-top">
+                <div>
+                  <span class="post-tag">Valorant</span>
+                  <h3>Recherche 2 mates pour ranked ce soir</h3>
+                </div>
+                <span class="time">Il y a 1h</span>
+              </div>
+              <p>
+                Salut, je cherche deux joueurs pour faire des parties ranked en
+                soirée. Niveau platine / diamant, on vise une team solide.
+              </p>
+              <div class="post-meta">
+                <span>Mode : Ranked</span>
+                <span>Rang : Platine</span>
+              </div>
+            </article>
+
+            <article class="post-card">
+              <div class="post-top">
+                <div>
+                  <span class="post-tag">Minecraft</span>
+                  <h3>Session créative / survie à partir de 20h</h3>
+                </div>
+                <span class="time">Il y a 3h</span>
+              </div>
+              <p>
+                Rejoins une session détendue sur Minecraft. Construction,
+                exploration, et chill avec voice chat.
+              </p>
+              <div class="post-meta">
+                <span>Mode : Chill</span>
+                <span>Coop</span>
+              </div>
+            </article>
+
+            <article class="post-card">
+              <div class="post-top">
+                <div>
+                  <span class="post-tag">League of Legends</span>
+                  <h3>Recherche partenaire mid/top pour duo</h3>
+                </div>
+                <span class="time">Aujourd’hui</span>
+              </div>
+              <p>
+                Rank platine, disponible en soirée. Aime jouer agressif et
+                construire une bonne comms d’équipe.
+              </p>
+              <div class="post-meta">
+                <span>Mode : Ranked</span>
+                <span>Objectif : Flex</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="empty-state">
+            <h3>Modèle de feed</h3>
+            <p>
+              Voici un exemple de page feed — remplace ces posts par le contenu
+              réel de la base de données lorsque le back-end sera prêt.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
+        <div class="footer-links">
+          <a href="/">Accueil</a>
+          <a href="/feed">Feed</a>
+          <a href="/register">Rejoindre</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>
