@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RUSH-B | Créer un post</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/components.css" />
+    <link rel="stylesheet" href="/static/css/responsive.css" />
+    <link rel="stylesheet" href="/static/css/create-post.css" />
+  </head>
+  <body>
+    <div class="site-bg"></div>
+
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a href="/" class="logo">
+          <span class="logo-mark">R</span>
+          <span class="logo-text">RUSH-B</span>
+        </a>
+
+        <nav class="nav-links" id="mobile-menu">
+          <a href="/">Accueil</a>
+          <a href="/posts">Posts</a>
+          <a
+            href="/create-post"
+            class="nav-plus active"
+            aria-label="Créer un post"
+          >
+            <span>+</span>
+          </a>
+          <a href="/profile">Profil</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="/login" class="btn btn-secondary">Connexion</a>
+          <a href="/register" class="btn btn-primary">Inscription</a>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+      </div>
+    </header>
+
+    <main class="create-post-page">
+      <section class="create-post-hero">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-label">Nouveau post</span>
+            <h1>Créer une publication</h1>
+            <p>
+              Rédige ton annonce, choisis le jeu et le mode. La partie connexion
+              utilisateur sera branchée plus tard.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="create-post-section">
+        <div class="container create-post-grid">
+          <article class="create-post-card">
+            {{ if .Error }}
+            <div class="alert alert-error">{{ .Error }}</div>
+            {{ end }} {{ if .Success }}
+            <div class="alert alert-success">{{ .Success }}</div>
+            {{ end }}
+
+            <form class="create-post-form" action="/create-post" method="POST">
+              <div class="form-group">
+                <label for="title">Titre</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  placeholder="Ex : Recherche mate ranked ce soir"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="game_id">Jeu</label>
+                <select id="game_id" name="game_id" required>
+                  <option value="">Choisir un jeu</option>
+                  {{ range .Games }}
+                  <option value="{{ .ID }}">{{ .Name }}</option>
+                  {{ end }}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="mode">Mode</label>
+                <select id="mode" name="mode" required>
+                  <option value="">Choisir un mode</option>
+                  <option value="Chill">Chill</option>
+                  <option value="Ranked">Ranked</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="content">Contenu</label>
+                <textarea
+                  id="content"
+                  name="content"
+                  rows="9"
+                  placeholder="Décris ton post, ce que tu recherches, ton niveau, tes horaires..."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  class="btn btn-primary create-post-submit"
+                >
+                  Publier le post
+                </button>
+                <a href="/" class="btn btn-secondary">Annuler</a>
+              </div>
+            </form>
+          </article>
+
+          <aside class="create-post-side">
+            <div class="side-card glow-card">
+              <span class="section-label">Conseil</span>
+              <h2>Rends ton post clair</h2>
+              <p>
+                Mets le jeu, le mode, ton niveau et ce que tu cherches. Plus
+                c’est clair, plus tu reçois vite des réponses.
+              </p>
+            </div>
+
+            <div class="side-card">
+              <h3>Exemple de structure</h3>
+              <ul class="tips-list">
+                <li>Jeu : Valorant.</li>
+                <li>Mode : Ranked.</li>
+                <li>Objectif : trouver 1 ou 2 mates pour ce soir.</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
+      </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>
