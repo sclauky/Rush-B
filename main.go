@@ -346,7 +346,6 @@ func main() {
         log.Fatal("Erreur ping DB:", err)
     }
 
-
     if os.Getenv("GIN_MODE") == "release" {
         gin.SetMode(gin.ReleaseMode)
     }
@@ -358,8 +357,8 @@ func main() {
     r.Static("/static", "frontend/web/static")
     r.Static("/uploads", "frontend/web/uploads")
 
-    r.StaticFile("/swipe", "frontend/web/static/swipe.html")
-    r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
+    r.StaticFile("/swipe", "/frontend/web/templates/swipe.html")
+    r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
 
     // Pages HTML
     r.GET("/", func(c *gin.Context) {
@@ -373,6 +372,10 @@ func main() {
     r.GET("/posts", func(c *gin.Context) {
         c.HTML(http.StatusOK, "posts.html", gin.H{})
     })
+
+	r.GET("/frontend/web/swipe/swipe.html", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "swipe.html", gin.H{})
+	})
 
     r.GET("/create-post", func(c *gin.Context) {
         c.HTML(http.StatusOK, "create-post.html", gin.H{})
