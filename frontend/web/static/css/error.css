@@ -1,0 +1,119 @@
+:root {
+  --bg: #0b1020;
+  --bg-soft: rgba(255, 255, 255, 0.04);
+  --panel: rgba(18, 25, 48, 0.75);
+  --border: rgba(124, 92, 255, 0.18);
+  --text: #f5f7ff;
+  --muted: #b8bfdc;
+  --accent: #7c5cff;
+  --accent-hover: #6a4df0;
+  --secondary-border: #2d355f;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(124, 92, 255, 0.18), transparent 35%),
+    linear-gradient(180deg, #0b1020 0%, #090d18 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.error-page {
+  width: 100%;
+  max-width: 760px;
+}
+
+.error-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 3rem 2rem;
+  text-align: center;
+  backdrop-filter: blur(14px);
+}
+
+.error-code {
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(4rem, 12vw, 7rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.error-title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  margin: 0 0 1rem;
+}
+
+.error-text {
+  margin: 0 auto 2rem;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.error-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  min-height: 48px;
+  padding: 0.9rem 1.25rem;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.error-btn.primary {
+  background: var(--accent);
+  color: white;
+}
+
+.error-btn.primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+.error-btn.secondary {
+  background: var(--bg-soft);
+  color: var(--text);
+  border: 1px solid var(--secondary-border);
+}
+
+.error-btn.secondary:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .error-card {
+    padding: 2.25rem 1.25rem;
+  }
+
+  .error-btn {
+    width: 100%;
+  }
+}
