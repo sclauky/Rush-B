@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS users (
-CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
@@ -15,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
-CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     session_token TEXT NOT NULL UNIQUE,
@@ -25,12 +23,10 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE TABLE IF NOT EXISTS game_types (
-CREATE TABLE IF NOT EXISTS game_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS games (
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
@@ -39,12 +35,10 @@ CREATE TABLE IF NOT EXISTS games (
 );
 
 CREATE TABLE IF NOT EXISTS categories (
-CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS posts (
 CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -60,7 +54,6 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 
 CREATE TABLE IF NOT EXISTS post_categories (
-CREATE TABLE IF NOT EXISTS post_categories (
     post_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     PRIMARY KEY (post_id, category_id),
@@ -68,7 +61,6 @@ CREATE TABLE IF NOT EXISTS post_categories (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS comments (
 CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
@@ -81,7 +73,6 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 CREATE TABLE IF NOT EXISTS post_reactions (
-CREATE TABLE IF NOT EXISTS post_reactions (
     post_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     reaction_type TEXT NOT NULL CHECK (reaction_type IN ('like', 'dislike')),
@@ -92,7 +83,6 @@ CREATE TABLE IF NOT EXISTS post_reactions (
 );
 
 CREATE TABLE IF NOT EXISTS comment_reactions (
-CREATE TABLE IF NOT EXISTS comment_reactions (
     comment_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     reaction_type TEXT NOT NULL CHECK (reaction_type IN ('like', 'dislike')),
@@ -102,7 +92,6 @@ CREATE TABLE IF NOT EXISTS comment_reactions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS user_preferences (
 CREATE TABLE IF NOT EXISTS user_preferences (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
@@ -118,46 +107,46 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 );
 
 CREATE TABLE IF NOT EXISTS user_games (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  game_name TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    game_name TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS user_game_types (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  game_type TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    game_type TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS swipes (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	swiper_id INTEGER NOT NULL,
-	target_id INTEGER NOT NULL,
-	direction TEXT NOT NULL CHECK(direction IN ('like','pass')),
-	created_at DATETIME NOT NULL,
-	UNIQUE(swiper_id, target_id),
-	FOREIGN KEY (swiper_id) REFERENCES users(id) ON DELETE CASCADE,
-	FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    swiper_id INTEGER NOT NULL,
+    target_id INTEGER NOT NULL,
+    direction TEXT NOT NULL CHECK(direction IN ('like','pass')),
+    created_at DATETIME NOT NULL,
+    UNIQUE(swiper_id, target_id),
+    FOREIGN KEY (swiper_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS matches (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	user1_id INTEGER NOT NULL,
-	user2_id INTEGER NOT NULL,
-	created_at DATETIME NOT NULL,
-	UNIQUE(user1_id, user2_id),
-	FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
-	FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user1_id INTEGER NOT NULL,
+    user2_id INTEGER NOT NULL,
+    created_at DATETIME NOT NULL,
+    UNIQUE(user1_id, user2_id),
+    FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS user_photos (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	user_id INTEGER NOT NULL,
-	photo_path TEXT NOT NULL,
-	position INTEGER NOT NULL DEFAULT 0,
-	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    photo_path TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 INSERT OR IGNORE INTO game_types (name) VALUES
@@ -179,7 +168,7 @@ INSERT OR IGNORE INTO games (name, game_type_id) VALUES
 ('Rocket League', 6),
 ('EA FC 25', 6);
 
-INSERT OR IGNORE INTO categories (name) VALUES -- Catégories pour les posts
+INSERT OR IGNORE INTO categories (name) VALUES
 ('Recherche mate'),
 ('Discussion générale'),
 ('Aide'),
@@ -196,6 +185,3 @@ CREATE TABLE IF NOT EXISTS two_factor_codes (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-ALTER TABLE users
-    ADD COLUMN two_fa_enabled INTEGER NOT NULL DEFAULT 1 CHECK (two_fa_enabled IN (0,1));

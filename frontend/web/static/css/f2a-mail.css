@@ -1,0 +1,136 @@
+.f2a-body {
+  margin: 0;
+  padding: 0;
+  background: #09090f;
+  font-family: 'Inter', Arial, sans-serif;
+  color: #f5f7ff;
+}
+
+.f2a-wrapper {
+  background: #09090f;
+  padding: 40px 0;
+}
+
+.f2a-card {
+  background: linear-gradient(180deg, rgba(19, 19, 31, 0.98), rgba(11, 11, 20, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 40px 36px;
+  max-width: 520px;
+}
+
+.f2a-logo-cell {
+  padding-bottom: 28px;
+}
+
+.f2a-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.f2a-logo-icon {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c5cff, #00d4ff);
+  font-family: 'Orbitron', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  line-height: 40px;
+}
+
+.f2a-logo-text {
+  font-family: 'Orbitron', Arial, sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: #f5f7ff;
+}
+
+.f2a-badge-cell {
+  padding-bottom: 8px;
+}
+
+.f2a-badge {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #00d4ff;
+}
+
+.f2a-title-cell {
+  padding-bottom: 20px;
+}
+
+.f2a-title {
+  margin: 0;
+  font-family: 'Orbitron', Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #f5f7ff;
+}
+
+.f2a-text-cell {
+  padding-bottom: 32px;
+}
+
+.f2a-text {
+  margin: 0;
+  color: #a7adc7;
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 380px;
+}
+
+.f2a-text strong {
+  color: #f5f7ff;
+}
+
+.f2a-code-cell {
+  padding-bottom: 32px;
+}
+
+.f2a-code-box {
+  display: inline-block;
+  padding: 20px 40px;
+  background: rgba(124, 92, 255, 0.12);
+  border: 2px solid rgba(124, 92, 255, 0.35);
+  border-radius: 16px;
+}
+
+.f2a-code {
+  font-family: 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: #f5f7ff;
+  display: block;
+}
+
+.f2a-note-cell {
+  padding-bottom: 28px;
+}
+
+.f2a-note {
+  margin: 0;
+  color: #a7adc7;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.f2a-footer-cell {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 24px;
+}
+
+.f2a-footer {
+  margin: 0;
+  color: rgba(167, 173, 199, 0.5);
+  font-size: 12px;
+  text-align: center;
+}

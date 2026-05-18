@@ -3,70 +3,57 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="/static/css/f2a-mail.css">
 </head>
-<body style="margin:0;padding:0;background:#09090f;font-family:'Inter',Arial,sans-serif;color:#f5f7ff;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#09090f;padding:40px 0;">
+<body class="f2a-body">
+  <table class="f2a-wrapper" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
-        <table width="520" cellpadding="0" cellspacing="0"
-               style="background:linear-gradient(180deg,rgba(19,19,31,0.98),rgba(11,11,20,0.96));
-                      border:1px solid rgba(255,255,255,0.08);border-radius:24px;
-                      padding:40px 36px;max-width:520px;">
+        <table class="f2a-card" width="520" cellpadding="0" cellspacing="0">
           <tr>
-            <td align="center" style="padding-bottom:28px;">
-              <div style="display:inline-flex;align-items:center;gap:10px;">
-                <span style="display:inline-block;width:40px;height:40px;border-radius:12px;
-                             background:linear-gradient(135deg,#7c5cff,#00d4ff);
-                             font-family:'Orbitron',Arial,sans-serif;font-weight:800;
-                             font-size:16px;color:white;text-align:center;line-height:40px;">R</span>
-                <span style="font-family:'Orbitron',Arial,sans-serif;font-size:18px;
-                             letter-spacing:.1em;color:#f5f7ff;">RUSH-B</span>
+            <td align="center" class="f2a-logo-cell">
+              <div class="f2a-logo">
+                <span class="f2a-logo-icon">R</span>
+                <span class="f2a-logo-text">RUSH-B</span>
               </div>
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding-bottom:8px;">
-              <p style="margin:0;font-size:12px;font-weight:700;letter-spacing:.18em;
-                        text-transform:uppercase;color:#00d4ff;">Vérification</p>
+            <td align="center" class="f2a-badge-cell">
+              <p class="f2a-badge">Vérification</p>
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding-bottom:20px;">
-              <h1 style="margin:0;font-family:'Orbitron',Arial,sans-serif;font-size:26px;
-                         font-weight:800;color:#f5f7ff;">Ton code de connexion</h1>
+            <td align="center" class="f2a-title-cell">
+              <h1 class="f2a-title">Ton code de connexion</h1>
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding-bottom:32px;">
-              <p style="margin:0;color:#a7adc7;font-size:15px;line-height:1.7;max-width:380px;">
-                Salut {{NAME}}, voici ton code à usage unique pour te connecter à RUSH-B.
-                Il est valable <strong style="color:#f5f7ff;">10 minutes</strong>.
+            <td align="center" class="f2a-text-cell">
+              <p class="f2a-text">
+                Salut {{ .FirstName }}, voici ton code à usage unique pour te connecter à RUSH-B.
+                Il est valable <strong>10 minutes</strong>.
               </p>
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding-bottom:32px;">
-              <div style="display:inline-block;padding:20px 40px;
-                          background:rgba(124,92,255,0.12);
-                          border:2px solid rgba(124,92,255,0.35);
-                          border-radius:16px;">
-                <span style="font-family:'Courier New',monospace;font-size:38px;
-                             font-weight:700;letter-spacing:.35em;
-                             color:#f5f7ff;display:block;">{{CODE}}</span>
+            <td align="center" class="f2a-code-cell">
+              <div class="f2a-code-box">
+                <span class="f2a-code">{{ .Code }}</span>
               </div>
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding-bottom:28px;">
-              <p style="margin:0;color:#a7adc7;font-size:13px;line-height:1.6;">
+            <td align="center" class="f2a-note-cell">
+              <p class="f2a-note">
                 Si tu n'as pas tenté de te connecter, ignore cet e-mail.<br/>
                 Ne partage jamais ce code avec quelqu'un.
               </p>
             </td>
           </tr>
           <tr>
-            <td style="border-top:1px solid rgba(255,255,255,0.07);padding-top:24px;">
-              <p style="margin:0;color:rgba(167,173,199,0.5);font-size:12px;text-align:center;">
+            <td class="f2a-footer-cell">
+              <p class="f2a-footer">
                 © 2026 RUSH-B — Forum gaming communautaire.
               </p>
             </td>
