@@ -6,26 +6,27 @@
   <title>Rush-B — Find Your Squad</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/css/swipe.css" />
-    <script src="/static/js/swipe.js"></script>
-
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/static/css/swipe.css" />
+  <script src="/static/js/swipe.js" defer></script>
 </head>
 <body>
   <div class="site-bg"></div>
 
-  <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-inner">
-      <a href="/templates/home.html" class="logo">
+      <a href="/" class="logo">
         <div class="logo-mark">B</div>
         <span class="logo-text">Rush-B</span>
       </a>
       <div class="nav-links">
-        <a href="/templates/home.html">Accueil</a>
-        <a href="/templates/posts.html">Posts</a>
-        <a href="/templates/swipe.html" class="active">Finder</a>
-        <a href="/templates/profile.html">Profil</a>
+        <a href="/">Accueil</a>
+        <a href="/posts">Posts</a>
+        <a href="/swipe" class="active">Finder</a>
+        <a href="/profile">Profil</a>
       </div>
       <div class="nav-actions">
         <button class="btn btn-primary" id="btn-logout">Déconnexion</button>
@@ -35,8 +36,6 @@
 
   <main class="swipe-page">
     <div class="container">
-
-      <!-- Header -->
       <div class="swipe-header">
         <div class="swipe-title-wrap">
           <div class="swipe-eyebrow">
@@ -48,44 +47,34 @@
         </div>
       </div>
 
-      <!-- Swipe view -->
       <div id="view-swipe">
         <div class="swipe-arena">
-
-          <!-- Card area -->
           <div class="card-stack-wrap">
             <div class="card-stack" id="card-stack">
-              <!-- Ghost layers (background stack effect) -->
               <div class="stack-ghost"></div>
               <div class="stack-ghost"></div>
 
-              <!-- Loading -->
               <div class="loading-state" id="loading-state">
                 <div class="loading-spinner"></div>
                 <p class="loading-text">30 secondes, on va chercher des profils !</p>
               </div>
 
-              <!-- Empty -->
               <div class="empty-state" id="empty-state">
                 <div class="empty-icon">🎮</div>
                 <h3 class="empty-title">Plus personne</h3>
                 <p class="empty-sub">Tu as vu tous les profils disponibles. (p'tit gourmand)</p>
                 <button class="btn btn-ghost btn-sm" id="btn-reload-profiles">Recharger</button>
               </div>
-
-              <!-- Card will be injected here -->
             </div>
 
-            <!-- Actions -->
             <div class="swipe-actions" id="swipe-actions" style="display:none;">
               <button class="action-btn action-pass" id="btn-pass" title="Passer">✕</button>
               <button class="action-btn action-like" id="btn-like" title="Liker">♥</button>
               <button class="action-btn action-super" id="btn-super" title="Super like">★</button>
             </div>
-            <p class="swipe-hint">← pass   ♥  smash →</p>
+            <p class="swipe-hint">← pass   ♥  smash →</p>
           </div>
 
-          <!-- Matches sidebar -->
           <aside class="matches-panel" id="matches-sidebar">
             <div class="matches-panel-header">
               <span class="matches-panel-title">Mes smash</span>
@@ -98,11 +87,9 @@
               </div>
             </div>
           </aside>
-
         </div>
       </div>
 
-      <!-- Matches full view -->
       <div id="view-matches" class="matches-full-view">
         <div class="matches-full-grid" id="matches-full-grid">
           <div class="matches-empty" style="grid-column: 1/-1; padding: 4rem 0;">
@@ -111,11 +98,9 @@
           </div>
         </div>
       </div>
-
     </div>
   </main>
 
-  <!-- Match modal -->
   <div class="match-modal-overlay" id="match-modal">
     <div class="match-modal">
       <div class="match-sparkle">⚡</div>
