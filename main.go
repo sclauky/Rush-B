@@ -54,6 +54,15 @@ type MatchEntry struct {
 	MatchedAt time.Time `json:"matched_at"`
 }
 
+type ProfilePost struct {
+	ID        int
+	Title     string
+	Content   string
+	ImagePath string
+	CreatedAt string
+	Likes     int
+}
+
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var tokenStr string
@@ -90,8 +99,17 @@ func authMiddleware() gin.HandlerFunc {
 }
 
 func currentUserID(c *gin.Context) int {
-	id, _ := c.Get("userID")
-	return id.(int)
+	v, exists := c.Get("userID")
+	if !exists {
+		return 0
+	}
+
+	userID, ok := v.(int)
+	if !ok {
+		return 0
+	}
+
+	return userID
 }
 
 func validateSteamOpenID(values url.Values) error {
@@ -648,8 +666,6 @@ func main() {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
 
-	r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
-
 	r.GET("/", func(c *gin.Context) {
 		isLoggedIn := false
 
@@ -679,7 +695,6 @@ func main() {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
 	r.POST("/login", loginHandler)
-
 	r.POST("/register", registerHandler)
 
 	r.GET("/posts", authMiddleware(), func(c *gin.Context) {
@@ -697,13 +712,235 @@ func main() {
 	r.GET("/create-post", postHandlers.ShowCreatePost(db))
 	r.POST("/create-post", postHandlers.SubmitCreatePost(db))
 
-	r.GET("/profile", authMiddleware(), func(c *gin.Context) {
-		c.HTML(http.StatusOK, "profile.html", gin.H{})
+	r.GET("/edit-profile", authMiddleware(), func(c *gin.Context) {
+		userID := currentUserID(c)
+
+		var username, email, biography string
+		err := db.QueryRow(`
+			SELECT username, email, COALESCE(biography, '')
+			FROM users
+			WHERE id = ?
+		`, userID).Scan(&username, &email, &biography)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
+
+		var avatarPath string
+		err = db.QueryRow(`
+			SELECT photo_path
+			FROM user_photos
+			WHERE user_id = ?
+			ORDER BY position ASC, id ASC
+			LIMIT 1
+		`, userID).Scan(&avatarPath)
+		if err != nil || avatarPath == "" {
+			avatarPath = "/static/images/default-avatar.png"
+		}
+
+		c.HTML(http.StatusOK, "edit-profile.html", gin.H{
+			"Username":   username,
+			"Email":      email,
+			"Biography":  biography,
+			"AvatarPath": avatarPath,
+		})
 	})
 
-	r.GET("/users/:id", authMiddleware(), getOtherUserProfile)
-	r.POST("/users/:id/follow", authMiddleware(), followUserHandler)
-	r.POST("/users/:id/unfollow", authMiddleware(), unfollowUserHandler)
+	r.POST("/edit-profile", authMiddleware(), func(c *gin.Context) {
+        userID := currentUserID(c)
+
+        username := strings.TrimSpace(c.PostForm("username"))
+        email := strings.TrimSpace(c.PostForm("email"))
+        biography := strings.TrimSpace(c.PostForm("bio"))
+
+        var avatarPath string
+        err := db.QueryRow(`
+            SELECT photo_path
+            FROM user_photos
+            WHERE user_id = ?
+            ORDER BY position ASC, id ASC
+            LIMIT 1
+        `, userID).Scan(&avatarPath)
+        if err != nil || avatarPath == "" {
+            avatarPath = "/static/images/default-avatar.png"
+        }
+
+        if username == "" || email == "" {
+            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+                "Username":     username,
+                "Email":        email,
+                "Biography":    biography,
+                "AvatarPath":   avatarPath,
+                "ErrorMessage": "Le pseudo et l'email sont obligatoires.",
+            })
+            return
+        }
+
+        if len([]rune(biography)) > 201 { // Pour que ça marche avec 200 caractères tout pile.
+            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+                "Username":     username,
+                "Email":        email,
+                "Biography":    biography,
+                "AvatarPath":   avatarPath,
+                "ErrorMessage": "La biographie ne doit pas dépasser 200 caractères.",
+            })
+            return
+        }
+
+        _, err = db.Exec(`
+            UPDATE users
+            SET username = ?, email = ?, biography = ?
+            WHERE id = ?
+        `, username, email, biography, userID)
+        if err != nil {
+            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+                "Username":     username,
+                "Email":        email,
+                "Biography":    biography,
+                "AvatarPath":   avatarPath,
+                "ErrorMessage": "Impossible de mettre à jour le profil. Email ou pseudo peut-être déjà utilisé.",
+            })
+            return
+        }
+
+        file, err := c.FormFile("avatar")
+        if err == nil && file != nil {
+            uploadDir := "frontend/web/uploads/profile"
+            os.MkdirAll(uploadDir, 0755)
+
+            filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), filepath.Base(file.Filename))
+            dst := filepath.Join(uploadDir, filename)
+
+            if err := c.SaveUploadedFile(file, dst); err == nil {
+                photoPath := "/uploads/profile/" + filename
+
+                var existingPhotoID int
+                err = db.QueryRow(`
+                    SELECT id
+                    FROM user_photos
+                    WHERE user_id = ?
+                    ORDER BY position ASC, id ASC
+                    LIMIT 1
+                `, userID).Scan(&existingPhotoID)
+
+                if err == nil {
+                    db.Exec(`
+                        UPDATE user_photos
+                        SET photo_path = ?
+                        WHERE id = ?
+                    `, photoPath, existingPhotoID)
+                } else {
+                    db.Exec(`
+                        INSERT INTO user_photos (user_id, photo_path, position)
+                        VALUES (?, ?, 0)
+                    `, userID, photoPath)
+                }
+            }
+        }
+
+        c.Redirect(http.StatusFound, "/profile")
+    })
+
+	r.GET("/profile", authMiddleware(), func(c *gin.Context) {
+		userID := currentUserID(c)
+
+		var username, biography, createdAt string
+		err := db.QueryRow(`
+            SELECT username, COALESCE(biography, ''), created_at
+            FROM users
+            WHERE id = ?
+        `, userID).Scan(&username, &biography, &createdAt)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
+
+		var postCount int
+		err = db.QueryRow(`
+            SELECT COUNT(*)
+            FROM posts
+            WHERE user_id = ?
+        `, userID).Scan(&postCount)
+		if err != nil {
+			postCount = 0
+		}
+
+		var followersCount int
+		err = db.QueryRow(`
+            SELECT COUNT(*)
+            FROM matches
+            WHERE user1_id = ? OR user2_id = ?
+        `, userID, userID).Scan(&followersCount)
+		if err != nil {
+			followersCount = 0
+		}
+
+		var avatarPath string
+		err = db.QueryRow(`
+            SELECT photo_path
+            FROM user_photos
+            WHERE user_id = ?
+            ORDER BY position ASC, id ASC
+            LIMIT 1
+        `, userID).Scan(&avatarPath)
+		if err != nil || avatarPath == "" {
+			avatarPath = "/static/images/default-avatar.png"
+		}
+
+		rows, err := db.Query(`
+            SELECT
+                p.id,
+                p.title,
+                p.content,
+                COALESCE(p.image_path, ''),
+                strftime('%d/%m/%Y', p.created_at) as created_at,
+                COALESCE(SUM(CASE WHEN pr.reaction_type = 'like' THEN 1 ELSE 0 END), 0) as likes
+            FROM posts p
+            LEFT JOIN post_reactions pr ON pr.post_id = p.id
+            WHERE p.user_id = ?
+            GROUP BY p.id
+            ORDER BY p.created_at DESC
+        `, userID)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
+		defer rows.Close()
+
+		var posts []ProfilePost
+		for rows.Next() {
+			var p ProfilePost
+			if err := rows.Scan(&p.ID, &p.Title, &p.Content, &p.ImagePath, &p.CreatedAt, &p.Likes); err == nil {
+				posts = append(posts, p)
+			}
+		}
+
+		joinedDate := createdAt
+		layouts := []string{
+			time.RFC3339,
+			time.RFC3339Nano,
+			"2006-01-02 15:04:05",
+			"2006-01-02T15:04:05",
+			"2006-01-02T15:04:05Z",
+		}
+
+		for _, layout := range layouts {
+			if t, err := time.Parse(layout, createdAt); err == nil {
+				joinedDate = t.Format("02/01/2006")
+				break
+			}
+		}
+
+		c.HTML(http.StatusOK, "profile.html", gin.H{
+			"Username":       username,
+			"Biography":      biography,
+			"PostCount":      postCount,
+			"FollowersCount": followersCount,
+			"JoinedDate":     joinedDate,
+			"AvatarPath":     avatarPath,
+			"Posts":          posts,
+		})
+	})
 
 	r.GET("/search", authMiddleware(), func(c *gin.Context) {
 		searchService.SearchPageHandler(c)

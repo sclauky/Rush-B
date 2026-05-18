@@ -51,15 +51,18 @@
                     <p>Personnalisez vos informations publiques</p>
                 </div>
 
-                <form id="editProfileForm" enctype="multipart/form-data">
-                    <input type="hidden" id="userId" name="user_id" value="1">
-
+                <form id="editProfileForm" method="POST" action="/edit-profile" enctype="multipart/form-data">
                     <!-- Photo de profil -->
                     <div class="form-group">
                         <label>Photo de profil</label>
                         <div class="avatar-upload-section">
                             <div class="avatar-preview-wrapper">
-                                <img id="avatarPreview" src="/uploads/default-avatar.jpg" alt="Avatar" class="avatar-preview">
+                                <img
+                                    id="avatarPreview"
+                                    src="{{if .AvatarPath}}{{.AvatarPath}}{{else}}/static/images/default-avatar.png{{end}}"
+                                    alt="Avatar"
+                                    class="avatar-preview"
+                                >
                             </div>
                             <div class="avatar-upload-controls">
                                 <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
@@ -74,36 +77,61 @@
                     <!-- Pseudo -->
                     <div class="form-group">
                         <label for="username">Pseudo</label>
-                        <input type="text" id="username" name="username" placeholder="Votre pseudo" required>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Votre pseudo"
+                            value="{{.Username}}"
+                            required
+                        >
                     </div>
 
                     <!-- Email -->
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" name="email" placeholder="votre@email.com" required>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="votre@email.com"
+                            value="{{.Email}}"
+                            required
+                        >
                     </div>
 
                     <!-- Bio -->
                     <div class="form-group">
                         <label for="bio">Bio</label>
-                        <textarea id="bio" name="bio" rows="4" placeholder="Parlez-nous de vous..." maxlength="200"></textarea>
-                        <span class="char-count"><span id="bioCount">0</span>/200</span>
+                        <textarea
+                            id="bio"
+                            name="bio"
+                            rows="4"
+                            placeholder="Parlez-nous de vous..."
+                            maxlength="200"
+                        >{{.Biography}}</textarea>
+                        <span class="char-count"><span id="bioCount">{{len .Biography}}</span>/200</span>
                     </div>
 
                     <!-- Boutons d'action -->
                     <div class="form-actions">
-                        <a href="/frontend/web/profile/profile.html" class="btn btn-ghost">Annuler</a>
+                        <a href="/profile" class="btn btn-ghost">Annuler</a>
                         <button type="submit" class="btn btn-primary">
                             Enregistrer les modifications
                         </button>
                     </div>
 
-                    <div id="successMessage" class="success-message" style="display: none;">
-                        ✓ Profil mis à jour avec succès !
+                    {{if .SuccessMessage}}
+                    <div id="successMessage" class="success-message">
+                        {{.SuccessMessage}}
                     </div>
-                    <div id="errorMessage" class="error-message" style="display: none;">
-                        ✗ Erreur lors de la mise à jour
+                    {{end}}
+
+                    {{if .ErrorMessage}}
+                    <div id="errorMessage" class="error-message">
+                        {{.ErrorMessage}}
                     </div>
+                    {{end}}
                 </form>
             </div>
         </div>
@@ -120,6 +148,6 @@
         </div>
     </footer>
 
-    <script src="edit-profile.js"></script>
+    <script src="/static/js/edit-profile.js"></script>
 </body>
 </html>

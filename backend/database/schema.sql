@@ -149,6 +149,16 @@ CREATE TABLE IF NOT EXISTS user_photos (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS two_factor_codes (
+    id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER  NOT NULL,
+    code       TEXT     NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used       INTEGER  NOT NULL DEFAULT 0 CHECK (used IN (0,1)),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 INSERT OR IGNORE INTO game_types (name) VALUES
 ('FPS'),
 ('MOBA'),
@@ -195,6 +205,7 @@ CREATE TABLE IF NOT EXISTS follows (
     FOREIGN KEY (follower_id) REFERENCES users(id),
     FOREIGN KEY (followed_id) REFERENCES users(id)
 );
+<<<<<<< HEAD
 SELECT u.id,
        u.username,
        COALESCE((
@@ -209,3 +220,5 @@ WHERE u.id != ?
   AND u.username LIKE ?
 ORDER BY u.username ASC
 LIMIT 20;
+=======
+>>>>>>> 2d73cbe6c39c9a64a5fcd4d904d88c8904f469f5
