@@ -15,12 +15,12 @@ import (
 	"strings"
 	"time"
 
+	postHandlers "socialauth/backend/forum/post/handlers"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
-	postdb "socialauth/backend/forum/post/db"
-	handlers "socialauth/backend/forum/post/handlers"
 )
 
 var db *sql.DB
@@ -562,10 +562,6 @@ func main() {
 		log.Fatal("Erreur migration DB:", err)
 	}
 
-	postsDatabase := &postDB.PostDB{
-		DB: db,
-	}
-
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -577,10 +573,11 @@ func main() {
 	r.Static("/static", "frontend/web/static")
 	r.Static("/uploads", "frontend/web/uploads")
 
-    r.GET("/swipe", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "swipe.html", gin.H{})
-    })
-    r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
+	r.GET("/swipe", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "swipe.html", gin.H{})
+	})
+
+	r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
 
 	// Pages HTML
 
@@ -613,10 +610,7 @@ func main() {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
 
-postRepository := &postdb.PostDB{DB: db}
-postHandler := &handlers.PostHandler{DB: postRepository}
-
-	r.GET("/posts", authMiddleware(), postHandler.ServePostsPage)
+	r.GET("/posts", authMiddleware(), postHandlers.ServePostsPage)
 
 	r.GET("/create-post", postHandlers.ShowCreatePost(db))
 	r.POST("/create-post", postHandlers.SubmitCreatePost(db))
