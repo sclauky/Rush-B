@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recherche joueurs — Rush-B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/static/css/search.css" />
+  <script src="/static/js/search.js" defer></script>
+</head>
+<body>
+  <div class="site-bg"></div>
+
+  <main class="search-shell">
+    <div class="search-shell-inner">
+      <div class="search-logo">
+        <div class="search-logo-mark">B</div>
+        <span class="search-logo-text">Rush-B</span>
+      </div>
+
+      <div class="search-card">
+        <div class="search-card-glow"></div>
+        <div class="search-card-inner">
+          <p class="search-eyebrow">Recherche de joueurs</p>
+          <h1 class="search-title">Trouve n'importe quel pseudo</h1>
+          <p class="search-subtitle">Tape un username pour trouver un joueur et consulter son profil.</p>
+
+          <div class="search-bar-wrap">
+            <div class="search-bar" id="search-bar">
+              <span class="search-icon">🔍</span>
+              <input
+                id="search-input"
+                type="text"
+                placeholder="Rechercher un pseudo..."
+                autocomplete="off"
+              />
+              <button id="clear-btn" class="search-clear" type="button">✕</button>
+            </div>
+          </div>
+
+          <div class="search-results" id="search-results">
+            <div class="search-hint" id="search-hint">
+              Commence à taper un pseudo.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="search-footer-hint">
+        Seuls les joueurs avec un compte Rush-B peuvent être trouvés.
+      </p>
+    </div>
+  </main>
+</body>
+</html>

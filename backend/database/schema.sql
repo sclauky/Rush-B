@@ -185,3 +185,18 @@ CREATE TABLE IF NOT EXISTS two_factor_codes (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+SELECT u.id,
+       u.username,
+       COALESCE((
+           SELECT photo_path
+           FROM user_photos
+           WHERE user_id = u.id
+           ORDER BY position ASC, id ASC
+           LIMIT 1
+       ), '') AS avatar
+FROM users u
+WHERE u.id != ?
+  AND u.username LIKE ?
+ORDER BY u.username ASC
+LIMIT 20;
