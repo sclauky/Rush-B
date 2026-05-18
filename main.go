@@ -19,9 +19,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
-
-	postDB "socialauth/backend/forum/post/db"
-	postHandlers "socialauth/backend/forum/post/handlers"
+	postdb "socialauth/backend/forum/post/db"
+	handlers "socialauth/backend/forum/post/handlers"
 )
 
 var db *sql.DB
@@ -445,14 +444,21 @@ func registerHandler(c *gin.Context) {
 
 	if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
-			"Error": "Tous les champs sont obligatoires",
+			"RegisterError": "Tous les champs sont obligatoires",
 		})
 		return
 	}
 
 	if password != confirmPassword {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
-			"Error": "Les mots de passe ne correspondent pas",
+			"ConfirmPasswordError": "Les mots de passe ne correspondent pas",
+		})
+		return
+	}
+
+	if !utils.IsValidPassword(password) {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"PasswordError": "Le mot de passe doit contenir au moins 7 caractères, une majuscule, une minuscule et un chiffre.",
 		})
 		return
 	}
@@ -464,12 +470,12 @@ func registerHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO users (first_name, last_name, email, username, password_hash)
-        VALUES (?, ?, ?, ?, ?)
-    `, firstName, lastName, email, username, hashedPassword)
+		INSERT INTO users (first_name, last_name, email, username, password_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, firstName, lastName, email, username, hashedPassword)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
-			"Error": "Impossible de créer le compte",
+			"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
 		})
 		return
 	}
@@ -571,8 +577,10 @@ func main() {
 	r.Static("/static", "frontend/web/static")
 	r.Static("/uploads", "frontend/web/uploads")
 
-	r.StaticFile("/swipe", "/frontend/web/templates/swipe.html")
-	r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
+    r.GET("/swipe", func(c *gin.Context) {
+        c.HTML(http.StatusOK, "swipe.html", gin.H{})
+    })
+    r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
 
 	// Pages HTML
 
@@ -605,30 +613,10 @@ func main() {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
 
-	r.POST("/login", loginHandler)
+postRepository := &postdb.PostDB{DB: db}
+postHandler := &handlers.PostHandler{DB: postRepository}
 
-	r.GET("/register", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "register.html", gin.H{})
-	})
-
-	r.POST("/register", registerHandler)
-
-	r.GET("/posts", func(c *gin.Context) {
-
-		posts, err := postsDatabase.GetPosts(
-			postDB.PostFilter{},
-			0,
-		)
-
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-			return
-		}
-
-		c.HTML(http.StatusOK, "posts.html", gin.H{
-			"Posts": posts,
-		})
-	})
+	r.GET("/posts", authMiddleware(), postHandler.ServePostsPage)
 
 	r.GET("/create-post", postHandlers.ShowCreatePost(db))
 	r.POST("/create-post", postHandlers.SubmitCreatePost(db))
