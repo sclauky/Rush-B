@@ -435,45 +435,52 @@ func runMigrationsFromFile(db *sql.DB, filename string) error {
 }
 
 func registerHandler(c *gin.Context) {
-    username := strings.TrimSpace(c.PostForm("username"))
-    firstName := strings.TrimSpace(c.PostForm("first_name"))
-    lastName := strings.TrimSpace(c.PostForm("last_name"))
-    email := strings.TrimSpace(c.PostForm("email"))
-    password := c.PostForm("password")
-    confirmPassword := c.PostForm("confirm_password")
+	username := strings.TrimSpace(c.PostForm("username"))
+	firstName := strings.TrimSpace(c.PostForm("first_name"))
+	lastName := strings.TrimSpace(c.PostForm("last_name"))
+	email := strings.TrimSpace(c.PostForm("email"))
+	password := c.PostForm("password")
+	confirmPassword := c.PostForm("confirm_password")
 
-    if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
-        c.HTML(http.StatusBadRequest, "home.html", gin.H{
-            "Error": "Tous les champs sont obligatoires",
-        })
-        return
-    }
+	if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"RegisterError": "Tous les champs sont obligatoires",
+		})
+		return
+	}
 
-    if password != confirmPassword {
-        c.HTML(http.StatusBadRequest, "home.html", gin.H{
-            "Error": "Les mots de passe ne correspondent pas",
-        })
-        return
-    }
+	if password != confirmPassword {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"ConfirmPasswordError": "Les mots de passe ne correspondent pas",
+		})
+		return
+	}
 
-    hashedPassword, err := utils.HashPassword(password)
-    if err != nil {
-        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-        return
-    }
+	if !utils.IsValidPassword(password) {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"PasswordError": "Le mot de passe doit contenir au moins 7 caractères, une majuscule, une minuscule et un chiffre.",
+		})
+		return
+	}
 
-    _, err = db.Exec(`
-        INSERT INTO users (first_name, last_name, email, username, password_hash)
-        VALUES (?, ?, ?, ?, ?)
-    `, firstName, lastName, email, username, hashedPassword)
-    if err != nil {
-        c.HTML(http.StatusBadRequest, "home.html", gin.H{
-            "Error": "Impossible de créer le compte",
-        })
-        return
-    }
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
 
-    c.Redirect(http.StatusFound, "/login")
+	_, err = db.Exec(`
+		INSERT INTO users (first_name, last_name, email, username, password_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, firstName, lastName, email, username, hashedPassword)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
+		})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/login")
 }
 
 func loginHandler(c *gin.Context) {

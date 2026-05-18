@@ -13,25 +13,33 @@
     <link rel="stylesheet" href="/static/css/style.css" />
     <link rel="stylesheet" href="/static/css/components.css" />
     <link rel="stylesheet" href="/static/css/responsive.css" />
+    <style>
+      .form-error {
+        margin-top: 0.45rem;
+        color: #ff5a76;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+    </style>
   </head>
   <body>
     <div class="site-bg"></div>
 
-  <header class="navbar">
-    <div class="container nav-inner">
-      <a href="/frontend/web/templates/home.html" class="logo">
-        <span class="logo-mark">R</span>
-        <span class="logo-text">RUSH-B</span>
-      </a>
-
-      <nav class="nav-links" id="mobile-menu">
-        <a href="/">Accueil</a>
-
-        <a href="/create-post" class="nav-plus" aria-label="Créer un post">
-        <span>+</span>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a href="/" class="logo">
+          <span class="logo-mark">R</span>
+          <span class="logo-text">RUSH-B</span>
         </a>
-        <a href="/frontend/web/templates/swipe.html">Finder</a>
-      </nav>
+
+        <nav class="nav-links" id="mobile-menu">
+          <a href="/">Accueil</a>
+          <a href="/create-post" class="nav-plus" aria-label="Créer un post">
+            <span>+</span>
+          </a>
+          <a href="/swipe">Finder</a>
+        </nav>
 
         <div class="nav-actions">
           {{if .IsLoggedIn}}
@@ -71,6 +79,7 @@
               organiser des parties, partager des astuces et discuter de leurs
               jeux préférés.
             </p>
+
             <div class="hero-actions">
               <button class="btn btn-primary open-register-modal" type="button">
                 Commencer
@@ -96,8 +105,7 @@
 
           <div class="hero-panel">
             <div class="panel-glow"></div>
-              <div class="post-meta"></div>
-            </div>
+            <div class="post-meta"></div>
           </div>
         </div>
       </section>
@@ -122,7 +130,11 @@
     </footer>
 
     <!-- Modal d'inscription -->
-    <div class="modal-overlay" id="registerModal" aria-hidden="true">
+    <div
+      class="modal-overlay {{if or .RegisterError .PasswordError .ConfirmPasswordError}}is-open{{end}}"
+      id="registerModal"
+      aria-hidden="{{if or .RegisterError .PasswordError .ConfirmPasswordError}}false{{else}}true{{end}}"
+    >
       <div
         class="modal-dialog register-modal"
         role="dialog"
@@ -144,39 +156,46 @@
           <p>Rejoins RUSH-B et commence à trouver de vrais mates.</p>
         </div>
 
-      <form class="auth-form" action="/register" method="POST">
-        <div class="form-group">
-          <label for="register-first-name">Prénom</label>
-          <input
-            type="text"
-            id="register-first-name"
-            name="first_name"
-            placeholder="Ton prénom"
-            required
-          />
-        </div>
+        <form class="auth-form" action="/register" method="POST">
+          {{if .RegisterError}}
+          <p class="form-error">{{.RegisterError}}</p>
+          {{end}}
 
-        <div class="form-group">
-          <label for="register-last-name">Nom</label>
-          <input
-            type="text"
-            id="register-last-name"
-            name="last_name"
-            placeholder="Ton nom"
-            required
-          />
-        </div>
+          <div class="form-group">
+            <label for="register-first-name">Prénom</label>
+            <input
+              type="text"
+              id="register-first-name"
+              name="first_name"
+              placeholder="Ton prénom"
+              value="{{.FirstName}}"
+              required
+            />
+          </div>
 
-        <div class="form-group">
-          <label for="register-username">Nom d’utilisateur</label>
-          <input
-            type="text"
-            id="register-username"
-            name="username"
-            placeholder="Ton pseudo"
-            required
-          />
-        </div>
+          <div class="form-group">
+            <label for="register-last-name">Nom</label>
+            <input
+              type="text"
+              id="register-last-name"
+              name="last_name"
+              placeholder="Ton nom"
+              value="{{.LastName}}"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-username">Nom d’utilisateur</label>
+            <input
+              type="text"
+              id="register-username"
+              name="username"
+              placeholder="Ton pseudo"
+              value="{{.Username}}"
+              required
+            />
+          </div>
 
           <div class="form-group">
             <label for="register-email">Adresse e-mail</label>
@@ -185,6 +204,7 @@
               id="register-email"
               name="email"
               placeholder="exemple@mail.com"
+              value="{{.Email}}"
               required
             />
           </div>
@@ -196,14 +216,18 @@
               id="register-password"
               name="password"
               placeholder="Choisis un mot de passe"
+              minlength="7"
+              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{7,}"
+              title="Au moins 7 caractères, une majuscule, une minuscule et un chiffre"
               required
             />
+            {{if .PasswordError}}
+            <p class="form-error">{{.PasswordError}}</p>
+            {{end}}
           </div>
 
           <div class="form-group">
-            <label for="register-confirm-password"
-              >Confirmer le mot de passe</label
-            >
+            <label for="register-confirm-password">Confirmer le mot de passe</label>
             <input
               type="password"
               id="register-confirm-password"
@@ -211,6 +235,9 @@
               placeholder="Retape ton mot de passe"
               required
             />
+            {{if .ConfirmPasswordError}}
+            <p class="form-error">{{.ConfirmPasswordError}}</p>
+            {{end}}
           </div>
 
           <label class="checkbox-row terms-row">
