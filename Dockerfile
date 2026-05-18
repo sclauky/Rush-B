@@ -1,8 +1,8 @@
 # On installe l'image officielle de Go pour commencer le projet.
 FROM golang:1.25
 
-# Installe le gcc pour compiler le go avec CGO_ENABLED=1.
-RUN apt-get update && apt-get install -y gcc libc6-dev 
+# Installe le gcc pour compiler le go avec CGO_ENABLED=1 et sqlite3 pour ouvrir la base de données.
+RUN apt-get update && apt-get install -y gcc libc6-dev sqlite3
 
 # ça definit le repertoire de travail dans l'image pour que toutes les commandes soient faites ici.
 WORKDIR /app 

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profil - Rush-B</title>
+    <link rel="stylesheet" href="/static/css/profile.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="site-bg"></div>
+
+    <nav class="navbar">
+      <div class="container nav-inner">
+        <a href="/static/html/home.html" class="logo">
+          <div class="logo-mark">B</div>
+          <span class="logo-text">RUSH-B</span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Accueil</a>
+          <a href="/posts">Posts</a>
+          <a href="/swipe">Finder</a>
+          <a href="/profile">Profil</a>
+          <a href="/account/steam/link">Lier mon compte Steam</a>
+        </div>
+        <div class="nav-actions">
+          <a href="/logout" class="btn btn-secondary">Déconnexion</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container" style="padding: 3rem 0">
+      <div class="profile-layout">
+        <!-- Carte de profil -->
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar-wrapper">
+              <img
+                id="profileAvatar"
+                src="https://via.placeholder.com/100x100?text=Avatar"
+                alt="Avatar"
+                class="profile-avatar"
+              />
+            </div>
+            <div class="profile-info">
+              <h1 id="profileUsername" class="profile-username">
+                Chargement...
+              </h1>
+              <p id="profileBio" class="profile-bio">Chargement de la bio...</p>
+            </div>
+          </div>
+
+          <div class="profile-stats">
+            <div class="stat-item">
+              <strong id="postCount">0</strong>
+              <span>Posts</span>
+            </div>
+            <div class="stat-item">
+              <strong id="followersCount">0</strong>
+              <span>Followers</span>
+            </div>
+          </div>
+
+          <div class="profile-meta">
+            <div class="meta-item">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                ></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <div class="meta-item">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span id="profileJoined">Membre depuis</span>
+            </div>
+          </div>
+
+          <a
+            href="/edit-profile.html"
+            class="btn btn-primary"
+            style="width: 100%; margin-top: 1.5rem"
+          >
+            Modifier le profil
+          </a>
+        </div>
+
+        <!-- Section des posts -->
+        <div class="profile-posts-section">
+          <h2 class="section-title">Mes Posts</h2>
+          <div id="userPosts" class="posts-grid">
+            <div class="loading-message">Chargement des posts...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>&copy; 2026 Rush-B. Tous droits réservés.</p>
+        <div class="footer-links">
+          <a href="#">Confidentialité</a>
+          <a href="#">Conditions</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/static/js/profile.js"></script>
+  </body>
+</html>

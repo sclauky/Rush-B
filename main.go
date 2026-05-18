@@ -3,10 +3,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
+	"socialauth/backend/forum/auth/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -125,19 +129,118 @@ func currentUserID(c *gin.Context) int {
 	return id.(int)
 }
 
+func validateSteamOpenID(values url.Values) error {
+	values.Set("openid.mode", "check_authentication")
+
+	resp, err := http.PostForm("https://steamcommunity.com/openid/login", values)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(string(body), "is_valid:true") {
+		return fmt.Errorf("openid not valid")
+	}
+
+	return nil
+}
+
+func extractSteamID(claimedID string) (string, error) {
+	re := regexp.MustCompile(`^https?://steamcommunity\.com/openid/id/(\d+)$`)
+	matches := re.FindStringSubmatch(claimedID)
+	if len(matches) != 2 {
+		return "", fmt.Errorf("invalid claimed id")
+	}
+	return matches[1], nil
+}
+
+func steamLinkHandler(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID == 0 {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+
+	returnTo := baseURL + "/auth/steam/callback"
+	realm := baseURL
+
+	params := url.Values{}
+	params.Set("openid.ns", "http://specs.openid.net/auth/2.0")
+	params.Set("openid.mode", "checkid_setup")
+	params.Set("openid.return_to", returnTo)
+	params.Set("openid.realm", realm)
+	params.Set("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select")
+	params.Set("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select")
+
+	redirectURL := "https://steamcommunity.com/openid/login?" + params.Encode()
+	c.Redirect(http.StatusFound, redirectURL)
+}
+
+func steamCallbackHandler(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID == 0 {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	values := url.Values{}
+	for key, vals := range c.Request.URL.Query() {
+		if strings.HasPrefix(key, "openid.") && len(vals) > 0 {
+			values.Set(key, vals[0])
+		}
+	}
+
+	if err := validateSteamOpenID(values); err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid steam response"})
+		return
+	}
+
+	claimedID := values.Get("openid.claimed_id")
+	steamID, err := extractSteamID(claimedID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid steam id"})
+		return
+	}
+
+	var existingUserID int
+	err = db.QueryRow(`SELECT id FROM users WHERE steam_id = ?`, steamID).Scan(&existingUserID)
+	if err == nil && existingUserID != 0 && existingUserID != userID {
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": "steam account already linked"})
+		return
+	}
+
+	_, err = db.Exec(`UPDATE users SET steam_id = ? WHERE id = ?`, steamID, userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/profile")
+}
+
 func getProfiles(c *gin.Context) {
 	userID := currentUserID(c)
 
 	rows, err := db.Query(`
-		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
-		FROM users u
-		LEFT JOIN user_preferences up ON up.user_id = u.id
-		WHERE u.id != ?
-		  AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
-		ORDER BY RANDOM()
-		LIMIT 20
-	`, userID, userID)
+        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+               COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
+        FROM users u
+        LEFT JOIN user_preferences up ON up.user_id = u.id
+        WHERE u.id != ?
+          AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
+        ORDER BY RANDOM()
+        LIMIT 20
+    `, userID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
@@ -206,14 +309,14 @@ func getMatches(c *gin.Context) {
 	userID := currentUserID(c)
 
 	rows, err := db.Query(`
-		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
-		FROM matches m
-		JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
-		LEFT JOIN user_preferences up ON up.user_id = u.id
-		WHERE m.user1_id = ? OR m.user2_id = ?
-		ORDER BY m.created_at DESC
-	`, userID, userID, userID)
+        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+               COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
+        FROM matches m
+        JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
+        LEFT JOIN user_preferences up ON up.user_id = u.id
+        WHERE m.user1_id = ? OR m.user2_id = ?
+        ORDER BY m.created_at DESC
+    `, userID, userID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
@@ -331,77 +434,215 @@ func runMigrationsFromFile(db *sql.DB, filename string) error {
 	return err
 }
 
+func registerHandler(c *gin.Context) {
+	username := strings.TrimSpace(c.PostForm("username"))
+	firstName := strings.TrimSpace(c.PostForm("first_name"))
+	lastName := strings.TrimSpace(c.PostForm("last_name"))
+	email := strings.TrimSpace(c.PostForm("email"))
+	password := c.PostForm("password")
+	confirmPassword := c.PostForm("confirm_password")
+
+	if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"Error": "Tous les champs sont obligatoires",
+		})
+		return
+	}
+
+	if password != confirmPassword {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"Error": "Les mots de passe ne correspondent pas",
+		})
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
+
+	_, err = db.Exec(`
+        INSERT INTO users (first_name, last_name, email, username, password_hash)
+        VALUES (?, ?, ?, ?, ?)
+    `, firstName, lastName, email, username, hashedPassword)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"Error": "Impossible de créer le compte",
+		})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/login")
+}
+
+func loginHandler(c *gin.Context) {
+	email := strings.TrimSpace(c.PostForm("email"))
+	password := c.PostForm("password")
+
+	if email == "" || password == "" {
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{
+			"Error": "Email et mot de passe obligatoires",
+		})
+		return
+	}
+
+	var userID int
+	var passwordHash string
+
+	err := db.QueryRow(`SELECT id, password_hash FROM users WHERE email = ?`, email).Scan(&userID, &passwordHash)
+	if err != nil {
+		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+			"Error": "Identifiants invalides",
+		})
+		return
+	}
+
+	if !utils.CheckPassword(password, passwordHash) {
+		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+			"Error": "Identifiants invalides",
+		})
+		return
+	}
+
+	sessionToken := fmt.Sprintf("%d_%d", userID, time.Now().UnixNano())
+	expiresAt := time.Now().Add(24 * time.Hour)
+
+	_, err = db.Exec(
+		`INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)`,
+		userID, sessionToken, expiresAt,
+	)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
+
+	c.SetCookie("session_token", sessionToken, 86400, "/", "", false, true)
+	c.Redirect(http.StatusFound, "/profile")
+}
+
+func logoutHandler(c *gin.Context) {
+	token, err := c.Cookie("session_token")
+	if err == nil && token != "" {
+		// supprime la session en DB
+		db.Exec(`DELETE FROM sessions WHERE session_token = ?`, token)
+	}
+
+	// supprime le cookie
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
+
+	c.Redirect(http.StatusFound, "/")
+}
+
 func main() {
-    _ = godotenv.Load()
+	_ = godotenv.Load()
 
-    var err error
-    dbPath := os.Getenv("DB_PATH")
-    if dbPath == "" {
-        dbPath = "backend/database/data.db"
-    }
+	var err error
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "backend/database/data.db"
+	}
 
-    db, err = sql.Open("sqlite3", dbPath)
-    if err != nil {
-        log.Fatal("Erreur ouverture DB:", err)
-    }
-    if err = db.Ping(); err != nil {
-        log.Fatal("Erreur ping DB:", err)
-    }
+	db, err = sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Fatal("Erreur ouverture DB:", err)
+	}
+	if err = db.Ping(); err != nil {
+		log.Fatal("Erreur ping DB:", err)
+	}
 
-    if os.Getenv("GIN_MODE") == "release" {
-        gin.SetMode(gin.ReleaseMode)
-    }
+	if err := runMigrationsFromFile(db, "backend/database/schema.sql"); err != nil {
+		log.Fatal("Erreur migration DB:", err)
+	}
 
-    r := gin.Default()
+	postsDatabase := &postDB.PostDB{
+		DB: db,
+	}
 
-    // Templates + statiques
-    r.LoadHTMLGlob("frontend/web/templates/*.html")
-    r.Static("/static", "frontend/web/static")
-    r.Static("/uploads", "frontend/web/uploads")
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	r := gin.Default()
+
+	// Templates + statiques
+	r.LoadHTMLGlob("frontend/web/templates/*.html")
+	r.Static("/static", "frontend/web/static")
+	r.Static("/uploads", "frontend/web/uploads")
 
     r.GET("/swipe", func(c *gin.Context) {
         c.HTML(http.StatusOK, "swipe.html", gin.H{})
     })
     r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
 
-    // Pages HTML
-    r.GET("/", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "home.html", gin.H{})
-    })
+	// Pages HTML
 
-    r.GET("/login", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "login.html", gin.H{})
-    })
+	// Connection enregistrée
+	r.GET("/", func(c *gin.Context) {
+		isLoggedIn := false
+
+		token, err := c.Cookie("session_token")
+		if err == nil {
+			var userID int
+			var expiresAt time.Time
+
+			err = db.QueryRow(
+				`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`,
+				token,
+			).Scan(&userID, &expiresAt)
+
+			if err == nil && time.Now().Before(expiresAt) {
+				isLoggedIn = true
+			}
+		}
+
+		c.HTML(http.StatusOK, "home.html", gin.H{
+			"IsLoggedIn": isLoggedIn,
+		})
+	})
+	r.GET("/logout", logoutHandler)
+
+	r.GET("/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.html", gin.H{})
+	})
 
 postRepository := &postdb.PostDB{DB: db}
 postHandler := &handlers.PostHandler{DB: postRepository}
 
 	r.GET("/posts", authMiddleware(), postHandler.ServePostsPage)
 
-    r.GET("/create-post", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "create-post.html", gin.H{})
-    })
+	r.GET("/create-post", postHandlers.ShowCreatePost(db))
+	r.POST("/create-post", postHandlers.SubmitCreatePost(db))
 
-    r.GET("/profile", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "profile.html", gin.H{})
-    })
+	r.GET("/profile", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "profile.html", gin.H{})
+	})
 
-    // API swipe
-    api := r.Group("/api/swipe", authMiddleware())
-    {
-        api.GET("/profiles", getProfiles)
-        api.POST("/action", handleSwipe)
-        api.GET("/matches", getMatches)
-        api.DELETE("/matches/:id", deleteMatch)
-        api.POST("/photos", uploadPhoto)
-        api.DELETE("/photos/:id", deletePhoto)
-    }
+	r.NoRoute(func(c *gin.Context) {
+		c.HTML(http.StatusNotFound, "404.html", gin.H{})
+	})
 
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
+	steamGroup := r.Group("/", authMiddleware())
+	{
+		steamGroup.GET("/account/steam/link", steamLinkHandler)
+		steamGroup.GET("/auth/steam/callback", steamCallbackHandler)
+	}
 
-    log.Printf("Serveur lancé sur http://localhost:%s", port)
-    log.Fatal(r.Run(":" + port))
+	api := r.Group("/api/swipe", authMiddleware())
+	{
+		api.GET("/profiles", getProfiles)
+		api.POST("/action", handleSwipe)
+		api.GET("/matches", getMatches)
+		api.DELETE("/matches/:id", deleteMatch)
+		api.POST("/photos", uploadPhoto)
+		api.DELETE("/photos/:id", deletePhoto)
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Serveur lancé sur http://localhost:%s", port)
+	log.Fatal(r.Run(":" + port))
 }
