@@ -11,15 +11,14 @@ import (
 	"path/filepath"
 	"regexp"
 	"socialauth/backend/forum/auth/utils"
+	postDB "socialauth/backend/forum/post/db"
+	postHandlers "socialauth/backend/forum/post/handlers"
+	searchHandlers "socialauth/backend/forum/search"
 	"strconv"
 	"strings"
 	"time"
 
-	postDB "socialauth/backend/forum/post/db"
-	postHandlers "socialauth/backend/forum/post/handlers"
-
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -101,41 +100,6 @@ func authMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", userID)
-		c.Next()
-	}
-}
-
-func authMiddlewareJWT() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		secret := os.Getenv("JWT_SECRET")
-		tokenStr := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
-		if tokenStr == "" {
-			cookie, err := c.Cookie("session_token")
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-				return
-			}
-			tokenStr = cookie
-		}
-
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return []byte(secret), nil
-		})
-		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
-			return
-		}
-		userID := int(claims["user_id"].(float64))
 		c.Set("userID", userID)
 		c.Next()
 	}
@@ -640,7 +604,6 @@ func getOtherUserProfile(c *gin.Context) {
 		&u.SkillLevel,
 		&u.PlayStyle,
 	)
-
 	if err == sql.ErrNoRows {
 		c.HTML(http.StatusNotFound, "404.html", gin.H{})
 		return
@@ -668,7 +631,7 @@ func getOtherUserProfile(c *gin.Context) {
 	isFollowing := followCount > 0
 
 	c.HTML(http.StatusOK, "user-profile.html", gin.H{
-		"User":        u,
+		"User":       u,
 		"IsFollowing": isFollowing,
 	})
 }
@@ -693,6 +656,8 @@ func main() {
 	if err := runMigrationsFromFile(db, "backend/database/schema.sql"); err != nil {
 		log.Fatal("Erreur migration DB:", err)
 	}
+
+	searchService := &searchHandlers.Service{DB: db}
 
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -984,6 +949,10 @@ func main() {
 		})
 	})
 
+	r.GET("/search", authMiddleware(), func(c *gin.Context) {
+		searchService.SearchPageHandler(c)
+	})
+
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.html", gin.H{})
 	})
@@ -1002,6 +971,14 @@ func main() {
 		api.DELETE("/matches/:id", deleteMatch)
 		api.POST("/photos", uploadPhoto)
 		api.DELETE("/photos/:id", deletePhoto)
+	}
+
+	usersAPI := r.Group("/api/users", authMiddleware())
+	{
+		usersAPI.GET("/search", func(c *gin.Context) {
+			currentID := currentUserID(c)
+			searchService.SearchUsersAPI(c, currentID)
+		})
 	}
 
 	port := os.Getenv("PORT")

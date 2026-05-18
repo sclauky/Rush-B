@@ -205,3 +205,20 @@ CREATE TABLE IF NOT EXISTS follows (
     FOREIGN KEY (follower_id) REFERENCES users(id),
     FOREIGN KEY (followed_id) REFERENCES users(id)
 );
+<<<<<<< HEAD
+SELECT u.id,
+       u.username,
+       COALESCE((
+           SELECT photo_path
+           FROM user_photos
+           WHERE user_id = u.id
+           ORDER BY position ASC, id ASC
+           LIMIT 1
+       ), '') AS avatar
+FROM users u
+WHERE u.id != ?
+  AND u.username LIKE ?
+ORDER BY u.username ASC
+LIMIT 20;
+=======
+>>>>>>> 2d73cbe6c39c9a64a5fcd4d904d88c8904f469f5
