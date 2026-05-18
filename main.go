@@ -15,6 +15,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+	postdb "socialauth/backend/forum/post/db"
+	handlers "socialauth/backend/forum/post/handlers"
 )
 
 var db *sql.DB
@@ -357,8 +359,10 @@ func main() {
     r.Static("/static", "frontend/web/static")
     r.Static("/uploads", "frontend/web/uploads")
 
-    r.StaticFile("/swipe", "/frontend/web/templates/swipe.html")
-    r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
+    r.GET("/swipe", func(c *gin.Context) {
+        c.HTML(http.StatusOK, "swipe.html", gin.H{})
+    })
+    r.StaticFile("/edit-profile.html", "frontend/web/profile/edit-profile.html")
 
     // Pages HTML
     r.GET("/", func(c *gin.Context) {
@@ -369,13 +373,10 @@ func main() {
         c.HTML(http.StatusOK, "login.html", gin.H{})
     })
 
-    r.GET("/posts", func(c *gin.Context) {
-        c.HTML(http.StatusOK, "posts.html", gin.H{})
-    })
+postRepository := &postdb.PostDB{DB: db}
+postHandler := &handlers.PostHandler{DB: postRepository}
 
-	r.GET("/frontend/web/swipe/swipe.html", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "swipe.html", gin.H{})
-	})
+	r.GET("/posts", authMiddleware(), postHandler.ServePostsPage)
 
     r.GET("/create-post", func(c *gin.Context) {
         c.HTML(http.StatusOK, "create-post.html", gin.H{})

@@ -1,0 +1,56 @@
+{{define "posts.html"}}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Posts</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <main class="posts-page">
+    <div class="container">
+      <h1>Feed</h1>
+
+      {{if .Posts}}
+        <div class="posts-list">
+          {{range .Posts}}
+            <article class="post-card">
+              <div class="post-meta">
+                <strong>{{.AuthorName}}</strong>
+                <span>• {{.GameName}}</span>
+                <span>• {{.Mode}}</span>
+                <span>• {{.CreatedAt.Format "02/01/2006 15:04"}}</span>
+              </div>
+
+              <h2>{{.Title}}</h2>
+              <p>{{.Content}}</p>
+
+              {{if .ImagePath}}
+                <img src="{{.ImagePath}}" alt="Image du post" class="post-image">
+              {{end}}
+
+              {{if .Categories}}
+                <div class="post-categories">
+                  {{range .Categories}}
+                    <span class="tag">{{.Name}}</span>
+                  {{end}}
+                </div>
+              {{end}}
+
+              <div class="post-stats">
+                <span>👍 {{.LikeCount}}</span>
+                <span>👎 {{.DislikeCount}}</span>
+                <span>💬 {{.CommentCount}}</span>
+              </div>
+            </article>
+          {{end}}
+        </div>
+      {{else}}
+        <p>Aucun post pour le moment.</p>
+      {{end}}
+    </div>
+  </main>
+</body>
+</html>
+{{end}}
