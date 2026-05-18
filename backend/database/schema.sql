@@ -149,6 +149,16 @@ CREATE TABLE IF NOT EXISTS user_photos (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS two_factor_codes (
+    id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER  NOT NULL,
+    code       TEXT     NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used       INTEGER  NOT NULL DEFAULT 0 CHECK (used IN (0,1)),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 INSERT OR IGNORE INTO game_types (name) VALUES
 ('FPS'),
 ('MOBA'),
@@ -176,6 +186,7 @@ INSERT OR IGNORE INTO categories (name) VALUES
 ('Détente'),
 ('Tournoi');
 
+<<<<<<< HEAD
 CREATE TABLE IF NOT EXISTS two_factor_codes (
     id         INTEGER  PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER  NOT NULL,
@@ -195,3 +206,5 @@ CREATE TABLE IF NOT EXISTS follows (
     FOREIGN KEY (follower_id) REFERENCES users(id),
     FOREIGN KEY (followed_id) REFERENCES users(id)
 );
+=======
+>>>>>>> LiaisonDbSite
