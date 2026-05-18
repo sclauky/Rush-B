@@ -250,7 +250,6 @@
     gap: 1.2rem;
   }
 
-/* Bouton + néon dans la navbar */
 .nav-links .nav-plus {
   position: relative;
   display: inline-flex;
@@ -282,13 +281,12 @@
     0 0 12px rgba(124, 92, 255, 0.8);
 }
 
-/* Anneau néon fin qui tourne autour */
 .nav-links .nav-plus::before {
   content: "";
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  padding: 2px; /* épaisseur de l'anneau */
+  padding: 2px; 
   background: conic-gradient(
     from 0deg,
     rgba(0, 212, 255, 0.05),
@@ -307,7 +305,7 @@
   animation: neonRing 3.6s linear infinite;
 }
 
-/* disque central au-dessus de l'anneau */
+
 .nav-links .nav-plus::after {
   content: "";
   position: absolute;
@@ -318,7 +316,6 @@
   z-index: 1;
 }
 
-/* Hover plus punchy mais contrôlé */
 .nav-links .nav-plus:hover {
   transform: scale(1.08);
   border-color: rgba(255, 255, 255, 0.35);
