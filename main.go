@@ -445,14 +445,21 @@ func registerHandler(c *gin.Context) {
 
 	if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
-			"Error": "Tous les champs sont obligatoires",
+			"RegisterError": "Tous les champs sont obligatoires",
 		})
 		return
 	}
 
 	if password != confirmPassword {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
-			"Error": "Les mots de passe ne correspondent pas",
+			"ConfirmPasswordError": "Les mots de passe ne correspondent pas",
+		})
+		return
+	}
+
+	if !utils.IsValidPassword(password) {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"PasswordError": "Le mot de passe doit contenir au moins 7 caractères, une majuscule, une minuscule et un chiffre.",
 		})
 		return
 	}
@@ -464,12 +471,12 @@ func registerHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO users (first_name, last_name, email, username, password_hash)
-        VALUES (?, ?, ?, ?, ?)
-    `, firstName, lastName, email, username, hashedPassword)
+		INSERT INTO users (first_name, last_name, email, username, password_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, firstName, lastName, email, username, hashedPassword)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
-			"Error": "Impossible de créer le compte",
+			"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
 		})
 		return
 	}
