@@ -186,7 +186,6 @@ INSERT OR IGNORE INTO categories (name) VALUES
 ('Détente'),
 ('Tournoi');
 
-<<<<<<< HEAD
 CREATE TABLE IF NOT EXISTS two_factor_codes (
     id         INTEGER  PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER  NOT NULL,
@@ -206,5 +205,3 @@ CREATE TABLE IF NOT EXISTS follows (
     FOREIGN KEY (follower_id) REFERENCES users(id),
     FOREIGN KEY (followed_id) REFERENCES users(id)
 );
-=======
->>>>>>> LiaisonDbSite
