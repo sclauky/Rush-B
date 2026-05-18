@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modifier le profil - Rush-B</title>
-    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="stylesheet" href="/static/css/profile.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
@@ -12,23 +15,33 @@
 <body>
     <div class="site-bg"></div>
 
-    <nav class="navbar">
-        <div class="container nav-inner">
-            <a href="/" class="logo">
-                <div class="logo-mark">B</div>
-                <span class="logo-text">RUSH-B</span>
-            </a>
-            <div class="nav-links">
-                <a href="/frontend/web/home/home.html">Accueil</a>
-                <a href="/frontend/web/posts/posts.html">Posts</a>
-                <a href="/frontend/swipe/swipe.html">Finder</a>
-                <a href="/frontend/web/profile/profile.html">Profil</a>
-            </div>
-            <div class="nav-actions">
-                <button class="btn btn-ghost">Déconnexion</button>
-            </div>
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="/" class="logo">
+            <div class="logo-mark">B</div>
+            <span class="logo-text">RUSH-B</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="/">Accueil</a>
+
+            <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
+
+            <a href="/posts">Posts</a>
+            <a href="/swipe">Finder</a>
+
+            <a href="/profile">Profil</a>
         </div>
-    </nav>
+
+        <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
+        </a>
+
+        <div class="nav-actions">
+            <a href="/logout" class="btn btn-secondary">Déconnexion</a>
+        </div>
+    </div>
+</nav>
 
     <main class="container" style="padding: 3rem 0;">
         <div class="edit-profile-wrapper">
@@ -38,15 +51,18 @@
                     <p>Personnalisez vos informations publiques</p>
                 </div>
 
-                <form id="editProfileForm" enctype="multipart/form-data">
-                    <input type="hidden" id="userId" name="user_id" value="1">
-
+                <form id="editProfileForm" method="POST" action="/edit-profile" enctype="multipart/form-data">
                     <!-- Photo de profil -->
                     <div class="form-group">
                         <label>Photo de profil</label>
                         <div class="avatar-upload-section">
                             <div class="avatar-preview-wrapper">
-                                <img id="avatarPreview" src="/uploads/default-avatar.jpg" alt="Avatar" class="avatar-preview">
+                                <img
+                                    id="avatarPreview"
+                                    src="{{if .AvatarPath}}{{.AvatarPath}}{{else}}/static/images/default-avatar.png{{end}}"
+                                    alt="Avatar"
+                                    class="avatar-preview"
+                                >
                             </div>
                             <div class="avatar-upload-controls">
                                 <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
@@ -61,36 +77,61 @@
                     <!-- Pseudo -->
                     <div class="form-group">
                         <label for="username">Pseudo</label>
-                        <input type="text" id="username" name="username" placeholder="Votre pseudo" required>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Votre pseudo"
+                            value="{{.Username}}"
+                            required
+                        >
                     </div>
 
                     <!-- Email -->
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" name="email" placeholder="votre@email.com" required>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="votre@email.com"
+                            value="{{.Email}}"
+                            required
+                        >
                     </div>
 
                     <!-- Bio -->
                     <div class="form-group">
                         <label for="bio">Bio</label>
-                        <textarea id="bio" name="bio" rows="4" placeholder="Parlez-nous de vous..." maxlength="200"></textarea>
-                        <span class="char-count"><span id="bioCount">0</span>/200</span>
+                        <textarea
+                            id="bio"
+                            name="bio"
+                            rows="4"
+                            placeholder="Parlez-nous de vous..."
+                            maxlength="200"
+                        >{{.Biography}}</textarea>
+                        <span class="char-count"><span id="bioCount">{{len .Biography}}</span>/200</span>
                     </div>
 
                     <!-- Boutons d'action -->
                     <div class="form-actions">
-                        <a href="/frontend/web/profile/profile.html" class="btn btn-ghost">Annuler</a>
+                        <a href="/profile" class="btn btn-ghost">Annuler</a>
                         <button type="submit" class="btn btn-primary">
                             Enregistrer les modifications
                         </button>
                     </div>
 
-                    <div id="successMessage" class="success-message" style="display: none;">
-                        ✓ Profil mis à jour avec succès !
+                    {{if .SuccessMessage}}
+                    <div id="successMessage" class="success-message">
+                        {{.SuccessMessage}}
                     </div>
-                    <div id="errorMessage" class="error-message" style="display: none;">
-                        ✗ Erreur lors de la mise à jour
+                    {{end}}
+
+                    {{if .ErrorMessage}}
+                    <div id="errorMessage" class="error-message">
+                        {{.ErrorMessage}}
                     </div>
+                    {{end}}
                 </form>
             </div>
         </div>
@@ -107,6 +148,6 @@
         </div>
     </footer>
 
-    <script src="edit-profile.js"></script>
+    <script src="/static/js/edit-profile.js"></script>
 </body>
 </html>

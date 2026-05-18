@@ -361,3 +361,38 @@
   border: 2px solid #11111a;
   background: #1a1a26;
 }
+
+/* Unified styles for the floating + button and search icon */
+.nav-plus,
+.nav-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #f5f7ff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-plus {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 0 1px rgba(120, 120, 255, 0.2), 0 0 18px rgba(111, 159, 255, 0.25);
+}
+
+.nav-search {
+  margin-right: -0.5rem;
+}
+
+.nav-plus:hover,
+.nav-search:hover {
+  transform: translateY(-1px);
+  color: #7fd3ff;
+  border-color: rgba(127, 211, 255, 0.5);
+  box-shadow: 0 0 20px rgba(127, 211, 255, 0.2);
+}
