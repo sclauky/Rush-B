@@ -73,7 +73,13 @@ func authMiddleware() gin.HandlerFunc {
 		} else {
 			cookie, err := c.Cookie("session_token")
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+				// Requête API → JSON, navigation browser → redirect
+				if c.GetHeader("Accept") == "application/json" {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+				} else {
+					c.Redirect(http.StatusFound, "/login")
+					c.Abort()
+				}
 				return
 			}
 			tokenStr = cookie
@@ -84,12 +90,13 @@ func authMiddleware() gin.HandlerFunc {
 		err := db.QueryRow(
 			`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`, tokenStr,
 		).Scan(&userID, &expiresAt)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
-			return
-		}
-		if time.Now().After(expiresAt) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "session expired"})
+		if err != nil || time.Now().After(expiresAt) {
+			if c.GetHeader("Accept") == "application/json" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
+			} else {
+				c.Redirect(http.StatusFound, "/login")
+				c.Abort()
+			}
 			return
 		}
 
@@ -709,8 +716,8 @@ func main() {
 		})
 	})
 
-	r.GET("/create-post", postHandlers.ShowCreatePost(db))
-	r.POST("/create-post", postHandlers.SubmitCreatePost(db))
+	r.GET("/create-post", authMiddleware(), postHandlers.ShowCreatePost(db))
+	r.POST("/create-post", authMiddleware(), postHandlers.SubmitCreatePost(db))
 
 	r.GET("/edit-profile", authMiddleware(), func(c *gin.Context) {
 		userID := currentUserID(c)
