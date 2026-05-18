@@ -385,10 +385,6 @@
   box-shadow: 0 0 0 1px rgba(120, 120, 255, 0.2), 0 0 18px rgba(111, 159, 255, 0.25);
 }
 
-.nav-search {
-  margin-right: -0.5rem;
-}
-
 .nav-plus:hover,
 .nav-search:hover {
   transform: translateY(-1px);
