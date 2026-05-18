@@ -522,6 +522,19 @@ func loginHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/profile")
 }
 
+func logoutHandler(c *gin.Context) {
+	token, err := c.Cookie("session_token")
+	if err == nil && token != "" {
+		// supprime la session en DB
+		db.Exec(`DELETE FROM sessions WHERE session_token = ?`, token)
+	}
+
+	// supprime le cookie
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
+
+	c.Redirect(http.StatusFound, "/")
+}
+
 func main() {
 	_ = godotenv.Load()
 
@@ -562,9 +575,31 @@ func main() {
 	r.StaticFile("/edit-profile.html", "/frontend/web/profile/edit-profile.html")
 
 	// Pages HTML
+
+	// Connection enregistrée
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "home.html", gin.H{})
+		isLoggedIn := false
+
+		token, err := c.Cookie("session_token")
+		if err == nil {
+			var userID int
+			var expiresAt time.Time
+
+			err = db.QueryRow(
+				`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`,
+				token,
+			).Scan(&userID, &expiresAt)
+
+			if err == nil && time.Now().Before(expiresAt) {
+				isLoggedIn = true
+			}
+		}
+
+		c.HTML(http.StatusOK, "home.html", gin.H{
+			"IsLoggedIn": isLoggedIn,
+		})
 	})
+	r.GET("/logout", logoutHandler)
 
 	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
