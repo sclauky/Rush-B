@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RUSH-B | Vérification 2FA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/responsive.css" />
+  <link rel="stylesheet" href="/static/css/verify-2fa.css" />
+</head>
+<body>
+  <div class="site-bg"></div>
+
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/" class="logo">
+        <span class="logo-mark">R</span>
+        <span class="logo-text">RUSH-B</span>
+      </a>
+      <nav class="nav-links" id="mobile-menu">
+        <a href="/">Accueil</a>
+        <a href="/posts">Posts</a>
+        <a href="/swipe">Finder</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="/login" class="btn btn-secondary">Connexion</a>
+      </div>
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+    </div>
+  </header>
+
+  <main class="auth-page">
+    <div class="container">
+      <div class="tfa-card">
+        <div class="auth-card">
+
+          <div class="tfa-icon">🔐</div>
+
+          <div class="auth-card-header tfa-header">
+            <span class="section-label">Double authentification</span>
+            <h2>Vérifie ton identité</h2>
+            <p>Un code à 6 chiffres a été envoyé à ton adresse e-mail.</p>
+          </div>
+
+          <div class="tfa-info">
+            <span class="tfa-info-icon">📧</span>
+            <p>Vérifie ta boîte mail (et les <strong>spams</strong>). Le code expire dans <strong id="expire-label">10 min</strong>.</p>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+
+          <form id="tfa-form" action="/auth/2fa/verify" method="POST">
+            <div class="code-inputs" id="code-inputs">
+              <input class="code-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="off" data-idx="0" />
+              <input class="code-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="off" data-idx="1" />
+              <input class="code-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="off" data-idx="2" />
+              <input class="code-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="off" data-idx="3" />
+              <input class="code-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="off" data-idx="4" />
+              <input class="code-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="off" data-idx="5" />
+            </div>
+            <input type="hidden" name="code" id="code-hidden" />
+
+            <div class="tfa-msg error-msg" id="error-msg" aria-live="polite"></div>
+            <div class="tfa-msg success-msg" id="success-msg">Code correct ! Redirection…</div>
+
+            <button type="submit" class="btn btn-primary tfa-submit" id="submit-btn" disabled>
+              Vérifier le code
+            </button>
+          </form>
+
+          <div class="resend-row">
+            <span>Tu n'as pas reçu le code ?</span>
+            <button class="resend-btn" id="resend-btn" type="button" disabled>
+              Renvoyer
+            </button>
+            <span class="countdown" id="countdown"></span>
+          </div>
+
+          <p class="auth-footer-text tfa-back">
+            <a href="/login">← Retour à la connexion</a>
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
+      <div class="footer-links">
+        <a href="/">Accueil</a>
+        <a href="/posts">Explorer</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/verify-2fa.js"></script>
+</body>
+</html>

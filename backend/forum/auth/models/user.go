@@ -1,9 +1,11 @@
 package models
 
 type User struct {
-	ID           int64  `json:"id"`
-	Username     string `json:"username"`
-	Email        string `json:"email"`
-	PasswordHash string `json:"-"`
-	CreatedAt    string `json:"created_at"`
+    ID           int    `db:"id"`
+    FirstName    string `db:"first_name"`
+    LastName     string `db:"last_name"`
+    Email        string `db:"email"`
+    Username     string `db:"username"`
+    PasswordHash string `db:"password_hash"`
+    TwoFAEnabled bool   `db:"two_fa_enabled"`
 }
