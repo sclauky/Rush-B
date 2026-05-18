@@ -5,21 +5,31 @@ import (
 	"net/http"
 	"strconv"
 
-	"socialauth/backend/forum/post"
+	postDB "socialauth/backend/forum/post/db"
 
 	"github.com/gin-gonic/gin"
 )
 
+// récupère l'userID injecté par authMiddleware
+func currentUserID(c *gin.Context) (int, bool) {
+	val, exists := c.Get("userID")
+	if !exists {
+		return 0, false
+	}
+	id, ok := val.(int)
+	return id, ok
+}
+
 func ShowCreatePost(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		games, err := loadGames(db)
+		pdb := &postDB.PostDB{DB: db}
+		games, err := pdb.GetAllGames()
 		if err != nil {
 			c.HTML(http.StatusInternalServerError, "create-post.html", gin.H{
 				"Error": "Impossible de charger les jeux.",
 			})
 			return
 		}
-
 		c.HTML(http.StatusOK, "create-post.html", gin.H{
 			"Games": games,
 		})
@@ -28,68 +38,59 @@ func ShowCreatePost(db *sql.DB) gin.HandlerFunc {
 
 func SubmitCreatePost(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		pdb := &postDB.PostDB{DB: db}
+
+		// 1. Récupérer l'utilisateur connecté (injecté par authMiddleware)
+		userID, ok := currentUserID(c)
+		if !ok {
+			c.Redirect(http.StatusFound, "/login")
+			return
+		}
+
+		// 2. Lire les champs du formulaire
 		title := c.PostForm("title")
 		content := c.PostForm("content")
 		mode := c.PostForm("mode")
 		gameIDStr := c.PostForm("game_id")
 
+		// helper pour renvoyer le formulaire avec une erreur
+		renderError := func(msg string) {
+			games, _ := pdb.GetAllGames()
+			c.HTML(http.StatusBadRequest, "create-post.html", gin.H{
+				"Games": games,
+				"Error": msg,
+			})
+		}
+
+		// 3. Validation
+		if title == "" || content == "" || mode == "" || gameIDStr == "" {
+			renderError("Tous les champs sont obligatoires.")
+			return
+		}
+		if mode != "Chill" && mode != "Ranked" {
+			renderError("Le mode doit être Chill ou Ranked.")
+			return
+		}
 		gameID, err := strconv.Atoi(gameIDStr)
 		if err != nil || gameID <= 0 {
-			games, _ := loadGames(db)
-			c.HTML(http.StatusBadRequest, "create-post.html", gin.H{
-				"Games": games,
-				"Error": "Le jeu sélectionné est invalide.",
-			})
+			renderError("Le jeu sélectionné est invalide.")
 			return
 		}
 
-		if title == "" || content == "" || mode == "" {
-			games, _ := loadGames(db)
-			c.HTML(http.StatusBadRequest, "create-post.html", gin.H{
-				"Games": games,
-				"Error": "Tous les champs sont obligatoires.",
-			})
-			return
-		}
-
-		if mode != "Chill" && mode != "Ranked" {
-			games, _ := loadGames(db)
-			c.HTML(http.StatusBadRequest, "create-post.html", gin.H{
-				"Games": games,
-				"Error": "Le mode doit être Chill ou Ranked.",
-			})
-			return
-		}
-
-		games, err := loadGames(db)
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "create-post.html", gin.H{
-				"Error": "Impossible de recharger les jeux.",
-			})
-			return
-		}
-
-		c.HTML(http.StatusOK, "create-post.html", gin.H{
-			"Games":   games,
-			"Success": "Post prêt à être enregistré. L'utilisateur n'est pas encore branché.",
+		// 4. Insertion en base
+		_, err = pdb.CreatePost(postDB.CreatePostInput{
+			UserID:  userID,
+			GameID:  gameID,
+			Mode:    mode,
+			Title:   title,
+			Content: content,
 		})
-	}
-}
-
-func loadGames(db *sql.DB) ([]post.Game, error) {
-	rows, err := db.Query(`SELECT id, name FROM games ORDER BY name`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var games []post.Game
-	for rows.Next() {
-		var g post.Game
-		if err := rows.Scan(&g.ID, &g.Name); err != nil {
-			return nil, err
+		if err != nil {
+			renderError("Erreur lors de la création du post. Réessaie.")
+			return
 		}
-		games = append(games, g)
+
+		// 5. Redirection vers le feed
+		c.Redirect(http.StatusFound, "/posts")
 	}
-	return games, rows.Err()
 }
