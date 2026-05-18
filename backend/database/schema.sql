@@ -186,3 +186,16 @@ INSERT OR IGNORE INTO categories (name) VALUES -- Catégories pour les posts
 ('Compétitif'),
 ('Détente'),
 ('Tournoi');
+
+CREATE TABLE IF NOT EXISTS two_factor_codes (
+    id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER  NOT NULL,
+    code       TEXT     NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used       INTEGER  NOT NULL DEFAULT 0 CHECK (used IN (0,1)),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+ALTER TABLE users
+    ADD COLUMN two_fa_enabled INTEGER NOT NULL DEFAULT 1 CHECK (two_fa_enabled IN (0,1));
