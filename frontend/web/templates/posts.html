@@ -65,40 +65,51 @@
 
       <section class="feed-section">
         <div class="container">
-          <!-- POSTS DYNAMIQUES -->
           <div class="posts-grid">
             {{range .Posts}}
             <article class="post-card">
               <div class="post-top">
                 <div>
-                  <span class="post-tag">{{.Category}}</span>
-                  <h3>{{.Title}}</h3>
-                </div>
+                  <div class="post-meta-top">
+                    <a href="/users/{{.UserID}}" class="post-author-link">Posté par {{.AuthorName}}</a>
+                    <span class="time">{{.CreatedAt.Format "02/01/2006 15:04"}}</span>
+                  </div>
 
-                <span class="time">{{.CreatedAt}}</span>
+                  <h3>{{.Title}}</h3>
+
+                  <div class="post-tags">
+                    <span class="post-tag">{{.GameName}}</span>
+                    <span class="post-tag">{{.Mode}}</span>
+
+                    {{range .Categories}}
+                    <span class="post-tag">{{.Name}}</span>
+                    {{end}}
+                  </div>
+                </div>
               </div>
 
               <p>{{.Content}}</p>
 
+              {{if .ImagePath}}
+              <div class="post-image-wrap">
+                <img src="{{.ImagePath}}" alt="Image du post {{.Title}}" class="post-image" />
+              </div>
+              {{end}}
+
               <div class="post-meta">
-                <span>Posté par {{.Author}}</span>
+                <span>👍 {{.LikeCount}}</span>
+                <span>👎 {{.DislikeCount}}</span>
+                <span>💬 {{.CommentCount}}</span>
               </div>
             </article>
+            {{else}}
+            <div class="empty-state">
+              <h3>Aucun post pour le moment</h3>
+              <p>La communauté n’a encore rien publié.</p>
+              <a href="/create-post" class="btn btn-primary">Créer le premier post</a>
+            </div>
             {{end}}
           </div>
-
-          <!-- SI AUCUN POST -->
-          {{if not .Posts}}
-          <div class="empty-state">
-            <h3>Aucun post pour le moment</h3>
-
-            <p>La communauté n’a encore rien publié.</p>
-
-            <a href="/create-post" class="btn btn-primary">
-              Créer le premier post
-            </a>
-          </div>
-          {{end}}
         </div>
       </section>
     </main>

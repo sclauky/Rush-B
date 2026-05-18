@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profil utilisateur - Rush-B</title>
+    <link rel="stylesheet" href="/static/css/profile.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="site-bg"></div>
+
+    <nav class="navbar">
+      <div class="container nav-inner">
+        <a href="/" class="logo">
+          <div class="logo-mark">B</div>
+          <span class="logo-text">RUSH-B</span>
+        </a>
+
+        <div class="nav-links">
+          <a href="/">Accueil</a>
+          <a href="/posts">Posts</a>
+          <a href="/swipe">Finder</a>
+          <a href="/profile">Mon profil</a>
+        </div>
+
+        <div class="nav-actions">
+          <a href="/logout" class="btn btn-secondary">Déconnexion</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container" style="padding: 3rem 0">
+      <div class="profile-layout">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar-wrapper">
+              {{if .User.Photos}}
+              <img
+                src="{{index .User.Photos 0}}"
+                alt="Avatar de {{.User.Username}}"
+                class="profile-avatar"
+              />
+              {{else}}
+              <img
+                src="https://via.placeholder.com/100x100?text=Player"
+                alt="Avatar par défaut"
+                class="profile-avatar"
+              />
+              {{end}}
+            </div>
+
+            <div class="profile-info">
+              <h1 class="profile-username">{{.User.Username}}</h1>
+
+              <p class="profile-bio">
+                {{if .User.Biography}}
+                  {{.User.Biography}}
+                {{else}}
+                  Cet utilisateur n’a pas encore ajouté de biographie.
+                {{end}}
+              </p>
+            </div>
+          </div>
+
+          <div class="profile-stats">
+            <div class="stat-item">
+              <strong>{{len .User.GamesPlayed}}</strong>
+              <span>Jeux</span>
+            </div>
+            <div class="stat-item">
+              <strong>{{len .User.Photos}}</strong>
+              <span>Photos</span>
+            </div>
+          </div>
+
+          <div class="profile-meta">
+            <div class="meta-item">
+              <strong>Prénom :</strong>
+              <span>{{.User.FirstName}}</span>
+            </div>
+
+            <div class="meta-item">
+              <strong>Nom :</strong>
+              <span>{{.User.LastName}}</span>
+            </div>
+
+            <div class="meta-item">
+              <strong>Skill level :</strong>
+              <span>
+                {{if .User.SkillLevel}}
+                  {{.User.SkillLevel}}
+                {{else}}
+                  Non renseigné
+                {{end}}
+              </span>
+            </div>
+
+            <div class="meta-item">
+              <strong>Play style :</strong>
+              <span>
+                {{if .User.PlayStyle}}
+                  {{.User.PlayStyle}}
+                {{else}}
+                  Non renseigné
+                {{end}}
+              </span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap">
+            {{if .IsFollowing}}
+            <form method="POST" action="/users/{{.User.ID}}/unfollow" style="margin: 0">
+              <button type="submit" class="btn btn-secondary">Ne plus suivre</button>
+            </form>
+            {{else}}
+            <form method="POST" action="/users/{{.User.ID}}/follow" style="margin: 0">
+              <button type="submit" class="btn btn-primary">Suivre</button>
+            </form>
+            {{end}}
+
+            <a href="/messages?user_id={{.User.ID}}" class="btn btn-secondary">
+              Envoyer un message
+            </a>
+          </div>
+        </div>
+
+        <div class="profile-posts-section">
+          <h2 class="section-title">Informations joueur</h2>
+
+          <div class="profile-card" style="margin-bottom: 1.5rem">
+            <h3 style="margin-bottom: 1rem">Types de jeux</h3>
+
+            {{if .User.GameTypes}}
+            <div class="posts-grid">
+              {{range .User.GameTypes}}
+              <div class="post-card">
+                <p>{{.}}</p>
+              </div>
+              {{end}}
+            </div>
+            {{else}}
+            <p class="profile-bio">Aucun type de jeu renseigné.</p>
+            {{end}}
+          </div>
+
+          <div class="profile-card" style="margin-bottom: 1.5rem">
+            <h3 style="margin-bottom: 1rem">Jeux joués</h3>
+
+            {{if .User.GamesPlayed}}
+            <div class="posts-grid">
+              {{range .User.GamesPlayed}}
+              <div class="post-card">
+                <p>{{.}}</p>
+              </div>
+              {{end}}
+            </div>
+            {{else}}
+            <p class="profile-bio">Aucun jeu renseigné.</p>
+            {{end}}
+          </div>
+
+          <div class="profile-card">
+            <h3 style="margin-bottom: 1rem">Galerie</h3>
+
+            {{if .User.Photos}}
+            <div class="posts-grid">
+              {{range .User.Photos}}
+              <div class="post-card">
+                <img
+                  src="{{.}}"
+                  alt="Photo de profil"
+                  style="width: 100%; border-radius: 14px; object-fit: cover"
+                />
+              </div>
+              {{end}}
+            </div>
+            {{else}}
+            <p class="profile-bio">Aucune photo disponible.</p>
+            {{end}}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>&copy; 2026 Rush-B. Tous droits réservés.</p>
+        <div class="footer-links">
+          <a href="#">Confidentialité</a>
+          <a href="#">Conditions</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
