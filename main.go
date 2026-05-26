@@ -11,6 +11,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"socialauth/backend/forum/auth/utils"
+	commentDB "socialauth/backend/forum/comment/db"
+	commentH "socialauth/backend/forum/comment/handlers"
+	likeDB "socialauth/backend/forum/like/db"
+	likeH "socialauth/backend/forum/like/handlers"
 	postDB "socialauth/backend/forum/post/db"
 	postHandlers "socialauth/backend/forum/post/handlers"
 	searchHandlers "socialauth/backend/forum/search"
@@ -73,7 +77,6 @@ func authMiddleware() gin.HandlerFunc {
 		} else {
 			cookie, err := c.Cookie("session_token")
 			if err != nil {
-				// Requête API → JSON, navigation browser → redirect
 				if c.GetHeader("Accept") == "application/json" {
 					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
 				} else {
@@ -222,15 +225,15 @@ func getProfiles(c *gin.Context) {
 	userID := currentUserID(c)
 
 	rows, err := db.Query(`
-        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-               COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
-        FROM users u
-        LEFT JOIN user_preferences up ON up.user_id = u.id
-        WHERE u.id != ?
-          AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
-        ORDER BY RANDOM()
-        LIMIT 20
-    `, userID, userID)
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
+		FROM users u
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE u.id != ?
+		  AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
+		ORDER BY RANDOM()
+		LIMIT 20
+	`, userID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
@@ -299,14 +302,14 @@ func getMatches(c *gin.Context) {
 	userID := currentUserID(c)
 
 	rows, err := db.Query(`
-        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-               COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
-        FROM matches m
-        JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
-        LEFT JOIN user_preferences up ON up.user_id = u.id
-        WHERE m.user1_id = ? OR m.user2_id = ?
-        ORDER BY m.created_at DESC
-    `, userID, userID, userID)
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
+		FROM matches m
+		JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE m.user1_id = ? OR m.user2_id = ?
+		ORDER BY m.created_at DESC
+	`, userID, userID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
@@ -459,9 +462,9 @@ func registerHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO users (first_name, last_name, email, username, password_hash)
-        VALUES (?, ?, ?, ?, ?)
-    `, firstName, lastName, email, username, hashedPassword)
+		INSERT INTO users (first_name, last_name, email, username, password_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, firstName, lastName, email, username, hashedPassword)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "home.html", gin.H{
 			"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
@@ -548,9 +551,9 @@ func followUserHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
-        VALUES (?, ?, ?)
-    `, currentID, targetID, time.Now())
+		INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
+		VALUES (?, ?, ?)
+	`, currentID, targetID, time.Now())
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
 		return
@@ -569,9 +572,9 @@ func unfollowUserHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        DELETE FROM follows
-        WHERE follower_id = ? AND followed_id = ?
-    `, currentID, targetID)
+		DELETE FROM follows
+		WHERE follower_id = ? AND followed_id = ?
+	`, currentID, targetID)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
 		return
@@ -741,6 +744,26 @@ func main() {
 		})
 	})
 
+	r.GET("/posts/:id", authMiddleware(), func(c *gin.Context) {
+		postID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "404.html", gin.H{})
+			return
+		}
+		userID := currentUserID(c)
+		pdb := &postDB.PostDB{DB: db}
+		post, err := pdb.GetPostByID(postID, userID)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
+		if post == nil {
+			c.HTML(http.StatusNotFound, "404.html", gin.H{})
+			return
+		}
+		c.HTML(http.StatusOK, "post-detail.html", gin.H{"Post": post})
+	})
+
 	r.GET("/create-post", authMiddleware(), postHandlers.ShowCreatePost(db))
 	r.POST("/create-post", authMiddleware(), postHandlers.SubmitCreatePost(db))
 
@@ -749,10 +772,10 @@ func main() {
 
 		var username, email, biography string
 		err := db.QueryRow(`
-			SELECT username, email, COALESCE(biography, '')
-			FROM users
-			WHERE id = ?
-		`, userID).Scan(&username, &email, &biography)
+            SELECT username, email, COALESCE(biography, '')
+            FROM users
+            WHERE id = ?
+        `, userID).Scan(&username, &email, &biography)
 		if err != nil {
 			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
 			return
@@ -760,12 +783,12 @@ func main() {
 
 		var avatarPath string
 		err = db.QueryRow(`
-			SELECT photo_path
-			FROM user_photos
-			WHERE user_id = ?
-			ORDER BY position ASC, id ASC
-			LIMIT 1
-		`, userID).Scan(&avatarPath)
+            SELECT photo_path
+            FROM user_photos
+            WHERE user_id = ?
+            ORDER BY position ASC, id ASC
+            LIMIT 1
+        `, userID).Scan(&avatarPath)
 		if err != nil || avatarPath == "" {
 			avatarPath = "/static/images/default-avatar.png"
 		}
@@ -982,6 +1005,12 @@ func main() {
 		c.HTML(http.StatusNotFound, "404.html", gin.H{})
 	})
 
+	ldb := &likeDB.LikeDB{DB: db}
+	lh := &likeH.LikeHandler{DB: ldb}
+
+	cdb := &commentDB.CommentDB{DB: db}
+	ch := &commentH.CommentHandler{DB: cdb}
+
 	steamGroup := r.Group("/", authMiddleware())
 	{
 		steamGroup.GET("/account/steam/link", steamLinkHandler)
@@ -1003,6 +1032,32 @@ func main() {
 		usersAPI.GET("/search", func(c *gin.Context) {
 			currentID := currentUserID(c)
 			searchService.SearchUsersAPI(c, currentID)
+		})
+	}
+
+	postsAPI := r.Group("/api/posts", authMiddleware())
+	{
+		postsAPI.POST("/:id/like", func(c *gin.Context) {
+			c.Set("reaction", "like")
+			lh.ReactToPost(c)
+		})
+		postsAPI.POST("/:id/dislike", func(c *gin.Context) {
+			c.Set("reaction", "dislike")
+			lh.ReactToPost(c)
+		})
+
+		postsAPI.GET("/:id/comments", ch.ListComments)
+		postsAPI.POST("/:id/comments", ch.CreateComment)
+		postsAPI.PUT("/:id/comments/:comment_id", ch.UpdateComment)
+		postsAPI.DELETE("/:id/comments/:comment_id", ch.DeleteComment)
+
+		postsAPI.POST("/:id/comments/:comment_id/like", func(c *gin.Context) {
+			c.Set("reaction", "like")
+			lh.ReactToComment(c)
+		})
+		postsAPI.POST("/:id/comments/:comment_id/dislike", func(c *gin.Context) {
+			c.Set("reaction", "dislike")
+			lh.ReactToComment(c)
 		})
 	}
 
