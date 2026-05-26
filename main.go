@@ -40,6 +40,7 @@ type User struct {
 	SkillLevel  string   `json:"skill_level"`
 	PlayStyle   string   `json:"play_style"`
 	Photos      []string `json:"photos"`
+	SteamID     string
 }
 
 type SwipeRequest struct {
@@ -541,12 +542,12 @@ func followUserHandler(c *gin.Context) {
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "404.html", gin.H{})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	if targetID == currentID {
-		c.Redirect(http.StatusFound, "/profile")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot follow yourself"})
 		return
 	}
 
@@ -555,11 +556,11 @@ func followUserHandler(c *gin.Context) {
 		VALUES (?, ?, ?)
 	`, currentID, targetID, time.Now())
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/users/"+strconv.Itoa(targetID))
+	c.JSON(http.StatusOK, gin.H{"following": true})
 }
 
 func unfollowUserHandler(c *gin.Context) {
@@ -567,7 +568,7 @@ func unfollowUserHandler(c *gin.Context) {
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "404.html", gin.H{})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
@@ -576,11 +577,11 @@ func unfollowUserHandler(c *gin.Context) {
 		WHERE follower_id = ? AND followed_id = ?
 	`, currentID, targetID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/users/"+strconv.Itoa(targetID))
+	c.JSON(http.StatusOK, gin.H{"following": false})
 }
 
 func getOtherUserProfile(c *gin.Context) {
@@ -1001,9 +1002,14 @@ func main() {
 		searchService.SearchPageHandler(c)
 	})
 
+	r.GET("/users/:id", authMiddleware(), getOtherUserProfile)
+
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.html", gin.H{})
 	})
+
+	r.POST("/users/:id/follow", authMiddleware(), followUserHandler)
+	r.POST("/users/:id/unfollow", authMiddleware(), unfollowUserHandler)
 
 	ldb := &likeDB.LikeDB{DB: db}
 	lh := &likeH.LikeHandler{DB: ldb}
