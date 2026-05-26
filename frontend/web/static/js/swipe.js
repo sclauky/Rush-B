@@ -194,9 +194,8 @@ function setTopCard() {
     currentCard = null;
     return;
   }
-
-  // top visuel = dernière carte dans le DOM
-  currentCard = cards[cards.length - 1];
+  
+  currentCard = cards[0];
   currentCard.classList.add("is-top");
 
   resetCardTransform(currentCard);
@@ -241,6 +240,10 @@ function attachEvents() {
 function onPointerDown(e) {
   if (!currentCard) return;
   if (e.button !== 0 && e.pointerType === "mouse") return;
+
+  if (!e.target.closest(".swipe-card.is-top")) {
+    return;
+  }
 
   isDragging = true;
   dragStartX = e.clientX;
