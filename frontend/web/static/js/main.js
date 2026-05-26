@@ -24,51 +24,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const registerModal = document.getElementById("registerModal");
   const openRegisterButtons = document.querySelectorAll(".open-register-modal");
-  const closeRegisterModal = document.getElementById("closeRegisterModal");
+  const closeRegisterButton = document.getElementById("closeRegisterModal");
+  const onboardingModal = document.getElementById("onboardingModal");
 
-  function openModal() {
+  function openRegisterModal() {
     if (!registerModal) return;
     registerModal.classList.add("is-open");
     registerModal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
   }
 
-  function closeModal() {
+  function closeRegisterModal() {
     if (!registerModal) return;
     registerModal.classList.remove("is-open");
     registerModal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
   }
 
-  if (openRegisterButtons.length > 0) {
-    openRegisterButtons.forEach((button) => {
-      button.addEventListener("click", openModal);
-    });
-  }
+  openRegisterButtons.forEach((button) => {
+    button.addEventListener("click", openRegisterModal);
+  });
 
-  if (closeRegisterModal) {
-    closeRegisterModal.addEventListener("click", closeModal);
+  if (closeRegisterButton) {
+    closeRegisterButton.addEventListener("click", closeRegisterModal);
   }
 
   if (registerModal) {
     registerModal.addEventListener("click", (event) => {
       if (event.target === registerModal) {
-        closeModal();
+        closeRegisterModal();
       }
     });
   }
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      closeModal();
+      closeRegisterModal();
     }
   });
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const onboardingModal = document.getElementById("onboardingModal");
 
   if (onboardingModal && onboardingModal.classList.contains("is-open")) {
     document.body.classList.add("modal-open");
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("modal") === "register") {
+    openRegisterModal();
   }
 });
