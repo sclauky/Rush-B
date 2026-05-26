@@ -7,7 +7,6 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -16,50 +15,106 @@
     <link rel="stylesheet" href="/static/css/style.css" />
     <link rel="stylesheet" href="/static/css/components.css" />
     <link rel="stylesheet" href="/static/css/responsive.css" />
+
+    <style>
+      /* ── Post card cliquable ── */
+      .post-card-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+      }
+      .post-card {
+        transition: border-color .2s, transform .18s, box-shadow .2s;
+      }
+      .post-card-link:hover .post-card {
+        border-color: rgba(99,102,241,.45);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(99,102,241,.12);
+      }
+      .post-card h3 { transition: color .18s; }
+      .post-card-link:hover .post-card h3 { color: #a5b4fc; }
+
+      /* ── Réactions inline ── */
+      .post-actions {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+      }
+      .reaction-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .38rem .8rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.11);
+        background: rgba(255,255,255,.05);
+        color: rgba(255,255,255,.6);
+        font-size: .8rem;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background .18s, border-color .18s, color .18s, transform .1s;
+        line-height: 1;
+      }
+      .reaction-btn:hover  { background: rgba(255,255,255,.1); color: #fff; }
+      .reaction-btn:active { transform: scale(.93); }
+      .reaction-btn.active-like    { background: rgba(74,222,128,.15); border-color: #4ade80; color: #4ade80; }
+      .reaction-btn.active-dislike { background: rgba(248,113,113,.15); border-color: #f87171; color: #f87171; }
+
+      .comments-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .38rem .8rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: rgba(255,255,255,.04);
+        color: rgba(255,255,255,.5);
+        font-size: .8rem;
+        font-family: inherit;
+        text-decoration: none;
+        margin-left: auto;
+        transition: background .18s, color .18s;
+      }
+      .comments-link-btn:hover { background: rgba(255,255,255,.09); color: #fff; }
+    </style>
   </head>
 
   <body>
     <div class="site-bg"></div>
 
-<nav class="navbar">
-  <div class="container nav-inner">
-    <a href="/" class="logo">
-      <div class="logo-mark">B</div>
-      <span class="logo-text">RUSH-B</span>
-    </a>
-
-    <div class="nav-links">
-      <a href="/">Accueil</a>
-
-      <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
-
-      <a href="/posts">Posts</a>
-      <a href="/swipe">Finder</a>
-
-      <a href="/profile">Profil</a>
-    </div>
-
-    <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
-    </a>
-
-    <div class="nav-actions">
-      <a href="/logout" class="btn btn-secondary">Déconnexion</a>
-    </div>
-  </div>
-</nav>
+    <nav class="navbar">
+      <div class="container nav-inner">
+        <a href="/" class="logo">
+          <div class="logo-mark">B</div>
+          <span class="logo-text">RUSH-B</span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Accueil</a>
+          <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
+          <a href="/posts">Posts</a>
+          <a href="/swipe">Finder</a>
+          <a href="/profile">Profil</a>
+        </div>
+        <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+          </svg>
+        </a>
+        <div class="nav-actions">
+          <a href="/logout" class="btn btn-secondary">Déconnexion</a>
+        </div>
+      </div>
+    </nav>
 
     <main class="feed-page">
       <section class="page-hero">
         <div class="container">
           <div class="section-heading">
             <span class="section-label">COMMUNAUTÉ</span>
-
             <h2>Les derniers posts</h2>
-
-            <p>
-              Les publications des joueurs apparaîtront ici au fur et à mesure.
-            </p>
+            <p>Les publications des joueurs apparaîtront ici au fur et à mesure.</p>
           </div>
         </div>
       </section>
@@ -68,45 +123,58 @@
         <div class="container">
           <div class="posts-grid">
             {{range .Posts}}
-            <article class="post-card">
-              <div class="post-top">
-                <div>
-                  <div class="post-meta-top">
-                    <a href="/users/{{.UserID}}" class="post-author-link">Posté par {{.AuthorName}}</a>
-                    <span class="time">{{.CreatedAt.Format "02/01/2006 15:04"}}</span>
-                  </div>
-
-                  <h3>{{.Title}}</h3>
-
-                  <div class="post-tags">
-                    <span class="post-tag">{{.GameName}}</span>
-                    <span class="post-tag">{{.Mode}}</span>
-
-                    {{range .Categories}}
-                    <span class="post-tag">{{.Name}}</span>
-                    {{end}}
+            <a href="/posts/{{.ID}}" class="post-card-link">
+              <article class="post-card" data-post-id="{{.ID}}">
+                <div class="post-top">
+                  <div>
+                    <div class="post-meta-top">
+                      <span class="post-author-link">Posté par {{.AuthorName}}</span>
+                      <span class="time">{{.CreatedAt.Format "02/01/2006 15:04"}}</span>
+                    </div>
+                    <h3>{{.Title}}</h3>
+                    <div class="post-tags">
+                      <span class="post-tag">{{.GameName}}</span>
+                      <span class="post-tag">{{.Mode}}</span>
+                      {{range .Categories}}
+                      <span class="post-tag">{{.Name}}</span>
+                      {{end}}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <p>{{.Content}}</p>
+                <p>{{.Content}}</p>
 
-              {{if .ImagePath}}
-              <div class="post-image-wrap">
-                <img src="{{.ImagePath}}" alt="Image du post {{.Title}}" class="post-image" />
-              </div>
-              {{end}}
+                {{if .ImagePath}}
+                <div class="post-image-wrap">
+                  <img src="{{.ImagePath}}" alt="Image du post {{.Title}}" class="post-image" />
+                </div>
+                {{end}}
 
-              <div class="post-meta">
-                <span>👍 {{.LikeCount}}</span>
-                <span>👎 {{.DislikeCount}}</span>
-                <span>💬 {{.CommentCount}}</span>
-              </div>
-            </article>
+                <div class="post-actions" onclick="event.preventDefault(); event.stopPropagation();">
+                  <button
+                    class="reaction-btn like-btn {{if eq .UserReaction "like"}}active-like{{end}}"
+                    data-post-id="{{.ID}}"
+                    data-type="like"
+                    aria-label="Like"
+                  >👍 <span class="like-count">{{.LikeCount}}</span></button>
+
+                  <button
+                    class="reaction-btn dislike-btn {{if eq .UserReaction "dislike"}}active-dislike{{end}}"
+                    data-post-id="{{.ID}}"
+                    data-type="dislike"
+                    aria-label="Dislike"
+                  >👎 <span class="dislike-count">{{.DislikeCount}}</span></button>
+
+                  <a href="/posts/{{.ID}}#comments" class="comments-link-btn" onclick="event.stopPropagation();">
+                    💬 {{.CommentCount}}
+                  </a>
+                </div>
+              </article>
+            </a>
             {{else}}
             <div class="empty-state">
               <h3>Aucun post pour le moment</h3>
-              <p>La communauté n’a encore rien publié.</p>
+              <p>La communauté n'a encore rien publié.</p>
               <a href="/create-post" class="btn btn-primary">Créer le premier post</a>
             </div>
             {{end}}
@@ -118,7 +186,6 @@
     <footer class="footer">
       <div class="container footer-inner">
         <p>© 2026 RUSH-B — Forum gaming communautaire.</p>
-
         <div class="footer-links">
           <a href="/">Accueil</a>
           <a href="/posts">Posts</a>
@@ -127,5 +194,6 @@
     </footer>
 
     <script src="/static/js/main.js"></script>
+    <script src="/static/js/posts.js"></script>
   </body>
 </html>
