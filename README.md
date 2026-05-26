@@ -131,7 +131,7 @@ Rush-B/
         │
         └───uploads
             └───profile
-                    1_1779119276_clement kirk.png
+                    clement.png
 ```
 
 ---
