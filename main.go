@@ -36,6 +36,7 @@ type User struct {
 	SkillLevel  string   `json:"skill_level"`
 	PlayStyle   string   `json:"play_style"`
 	Photos      []string `json:"photos"`
+	SteamID string
 }
 
 type SwipeRequest struct {
@@ -532,25 +533,25 @@ func followUserHandler(c *gin.Context) {
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "404.html", gin.H{})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	if targetID == currentID {
-		c.Redirect(http.StatusFound, "/profile")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot follow yourself"})
 		return
 	}
 
 	_, err = db.Exec(`
-        INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
-        VALUES (?, ?, ?)
-    `, currentID, targetID, time.Now())
+		INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
+		VALUES (?, ?, ?)
+	`, currentID, targetID, time.Now())
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/users/"+strconv.Itoa(targetID))
+	c.JSON(http.StatusOK, gin.H{"following": true})
 }
 
 func unfollowUserHandler(c *gin.Context) {
@@ -558,20 +559,20 @@ func unfollowUserHandler(c *gin.Context) {
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "404.html", gin.H{})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	_, err = db.Exec(`
-        DELETE FROM follows
-        WHERE follower_id = ? AND followed_id = ?
-    `, currentID, targetID)
+		DELETE FROM follows
+		WHERE follower_id = ? AND followed_id = ?
+	`, currentID, targetID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/users/"+strconv.Itoa(targetID))
+	c.JSON(http.StatusOK, gin.H{"following": false})
 }
 
 func getOtherUserProfile(c *gin.Context) {
@@ -953,9 +954,14 @@ func main() {
 		searchService.SearchPageHandler(c)
 	})
 
+	r.GET("/users/:id", authMiddleware(), getOtherUserProfile)
+
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.html", gin.H{})
 	})
+
+	r.POST("/users/:id/follow", authMiddleware(), followUserHandler)
+	r.POST("/users/:id/unfollow", authMiddleware(), unfollowUserHandler)
 
 	steamGroup := r.Group("/", authMiddleware())
 	{
@@ -977,7 +983,47 @@ func main() {
 	{
 		usersAPI.GET("/search", func(c *gin.Context) {
 			currentID := currentUserID(c)
-			searchService.SearchUsersAPI(c, currentID)
+			query := strings.TrimSpace(c.Query("q"))
+
+			if query == "" {
+				c.JSON(http.StatusOK, gin.H{"users": []any{}})
+				return
+			}
+
+			rows, err := db.Query(`
+				SELECT u.id,
+					u.username,
+					COALESCE(u.biography, '') AS biography,
+					COALESCE(p.photo_path, '') AS avatar_path
+				FROM users u
+				LEFT JOIN user_photos p ON p.user_id = u.id
+				WHERE u.username LIKE ? || '%'
+				AND u.id != ?
+				ORDER BY u.username ASC
+				LIMIT 10
+			`, query, currentID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+				return
+			}
+			defer rows.Close()
+
+			type SearchUser struct {
+				ID         int    `json:"id"`
+				Username   string `json:"username"`
+				Biography  string `json:"biography"`
+				AvatarPath string `json:"avatar_path"`
+			}
+
+			var users []SearchUser
+			for rows.Next() {
+				var u SearchUser
+				if err := rows.Scan(&u.ID, &u.Username, &u.Biography, &u.AvatarPath); err == nil {
+					users = append(users, u)
+				}
+			}
+
+			c.JSON(http.StatusOK, gin.H{"users": users})
 		})
 	}
 
