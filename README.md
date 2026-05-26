@@ -64,12 +64,12 @@ Rush-B/
 
 Depuis la **racine du projet** (là où se trouvent `Dockerfile` et `compose.yaml`), exécuter :
 
-```bash
+```
 docker compose up --build
 ```
 
 - `--build` force la reconstruction de l’image à partir du `Dockerfile`, ce qui est utile après une modification du code ou de la configuration. 
-- Cette commande construit l’image, crée le conteneur et lance l’application avec la configuration définie dans `compose.yaml`. 
+-> Cette commande construit l’image, crée le conteneur et lance l’application avec la configuration définie dans `compose.yaml`. 
 
 ### 3. Accès au site
 

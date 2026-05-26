@@ -119,6 +119,32 @@ func createSession(c *gin.Context, db *sql.DB, userID int) error {
 	if err != nil {
 		return err
 	}
-	c.SetCookie("session_token", token, int((7*24*time.Hour).Seconds()), "/", "", false, true)
+	c.SetCookie("session_token", token, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 	return nil
+}
+
+func isAuthenticated(c *gin.Context, db *sql.DB) bool {
+	token, err := c.Cookie("session_token")
+	if err != nil || token == "" {
+		return false
+	}
+
+	var userID int
+	var expiresAt time.Time
+
+	err = db.QueryRow(`
+		SELECT user_id, expires_at
+		FROM sessions
+		WHERE session_token = ?
+	`, token).Scan(&userID, &expiresAt)
+
+	if err != nil {
+		return false
+	}
+
+	if time.Now().After(expiresAt) {
+		return false
+	}
+
+	return true
 }

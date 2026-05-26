@@ -26,40 +26,45 @@
   <body>
     <div class="site-bg"></div>
 
-<nav class="navbar">
-  <div class="container nav-inner">
-    <a href="/" class="logo">
-      <div class="logo-mark">B</div>
-      <span class="logo-text">RUSH-B</span>
-    </a>
+    <nav class="navbar">
+      <div class="container nav-inner">
+        <a href="/" class="logo">
+          <div class="logo-mark">B</div>
+          <span class="logo-text">RUSH-B</span>
+        </a>
 
-    <div class="nav-links">
-      <a href="/">Accueil</a>
+        <div class="nav-links">
+          <a href="/">Accueil</a>
+          <a href="/posts">Posts</a>
+          <a href="/swipe">Finder</a>
 
-      <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
+          {{if .IsAuthenticated}}
+          <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
+          <a href="/profile">Profil</a>
+          {{end}}
+        </div>
 
-      <a href="/posts">Posts</a>
-      <a href="/swipe">Finder</a>
-      <a href="/profile">Profil</a>
-    </div>
-
-    <div class="nav-actions">
-      <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-        >
-          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-        </svg>
-      </a>
-
-      <a href="/logout" class="btn btn-secondary">Déconnexion</a>
-    </div>
-  </div>
-</nav>
+        <div class="nav-actions">
+          {{if .IsAuthenticated}}
+          <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+            </svg>
+          </a>
+          <a href="/logout" class="btn btn-secondary">Déconnexion</a>
+          {{else}}
+          <button class="btn btn-ghost open-login-modal" type="button">Connexion</button>
+          <button class="btn btn-primary open-register-modal" type="button">Inscription</button>
+          {{end}}
+        </div>
+      </div>
+    </nav>
 
     <main>
       <section class="hero">
@@ -76,17 +81,20 @@
             </p>
 
             <div class="hero-actions">
+              {{if .IsAuthenticated}}
+              <a href="/posts" class="btn btn-primary">Continuer</a>
+              {{else}}
               <button class="btn btn-primary open-register-modal" type="button">
                 Commencer
               </button>
+              {{end}}
+
               <a href="/posts" class="btn btn-ghost">Explorer les posts</a>
             </div>
 
-            <div class="hero-stats">
-              </div>
-            </div>
+            <div class="hero-stats"></div>
           </div>
-          
+
           <div class="hero-panel">
             <div class="panel-glow"></div>
             <div class="post-meta"></div>
