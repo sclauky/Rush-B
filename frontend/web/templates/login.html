@@ -23,23 +23,31 @@
 
     <div class="nav-links">
       <a href="/">Accueil</a>
-
-      <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
-
       <a href="/posts">Posts</a>
       <a href="/swipe">Finder</a>
 
+      {{if .IsAuthenticated}}
+      <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
       <a href="/profile">Profil</a>
+      {{end}}
     </div>
 
-    <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
-    </a>
-
     <div class="nav-actions">
-      <a href="/login" class="btn btn-secondary">Connexion</a>
+      {{if .IsAuthenticated}}
+      <a href="/users/search" class="nav-search" aria-label="Rechercher un utilisateur">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+        </svg>
+      </a>
+      <a href="/logout" class="btn btn-secondary">Déconnexion</a>
+      {{else}}
+      <a href="/login" class="btn btn-ghost">Connexion</a>
+      <a href="/?modal=register" class="btn btn-primary">Inscription</a>
+      {{end}}
+    </div>
   </div>
 </nav>
+
 
   <main class="auth-page">
     <div class="container auth-wrapper">
@@ -121,7 +129,7 @@
 
           <p class="auth-footer-text">
             Pas encore de compte ?
-            <a href="/" class="text-link">Créer un compte</a>
+            <a href="/?modal=register" class="text-link">Créer un compte</a>
           </p>
         </div>
       </section>

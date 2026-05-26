@@ -1,23 +1,26 @@
 package main
 
 import (
-    "database/sql"
-    "fmt"
-    "io"
-    "log"
-    "net/http"
-    "net/url"
-    "os"
-    "path/filepath"
-    "regexp"
-    "socialauth/backend/forum/auth/utils"
-    postDB "socialauth/backend/forum/post/db"
-    postHandlers "socialauth/backend/forum/post/handlers"
-    searchHandlers "socialauth/backend/forum/search"
-    swipeHandlers "socialauth/backend/forum/swipe"
-    "strconv"
-    "strings"
-    "time"
+	"database/sql"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"socialauth/backend/forum/auth/utils"
+	commentDB "socialauth/backend/forum/comment/db"
+	commentH "socialauth/backend/forum/comment/handlers"
+	likeDB "socialauth/backend/forum/like/db"
+	likeH "socialauth/backend/forum/like/handlers"
+	postDB "socialauth/backend/forum/post/db"
+	postHandlers "socialauth/backend/forum/post/handlers"
+	searchHandlers "socialauth/backend/forum/search"
+	"strconv"
+	"strings"
+	"time"
 
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"
@@ -39,22 +42,22 @@ func authMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         var tokenStr string
 
-        authHeader := c.GetHeader("Authorization")
-        if authHeader != "" {
-            tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-        } else {
-            cookie, err := c.Cookie("session_token")
-            if err != nil {
-                if c.GetHeader("Accept") == "application/json" {
-                    c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-                } else {
-                    c.Redirect(http.StatusFound, "/login")
-                    c.Abort()
-                }
-                return
-            }
-            tokenStr = cookie
-        }
+		authHeader := c.GetHeader("Authorization")
+		if authHeader != "" {
+			tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+		} else {
+			cookie, err := c.Cookie("session_token")
+			if err != nil {
+				if c.GetHeader("Accept") == "application/json" {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+				} else {
+					c.Redirect(http.StatusFound, "/login")
+					c.Abort()
+				}
+				return
+			}
+			tokenStr = cookie
+		}
 
         var userID int
         var expiresAt time.Time
@@ -182,7 +185,212 @@ func steamCallbackHandler(c *gin.Context) {
         return
     }
 
-    c.Redirect(http.StatusFound, "/profile")
+	c.Redirect(http.StatusFound, "/profile")
+}
+
+func getProfiles(c *gin.Context) {
+	userID := currentUserID(c)
+
+	rows, err := db.Query(`
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
+		FROM users u
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE u.id != ?
+		  AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
+		ORDER BY RANDOM()
+		LIMIT 20
+	`, userID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+	defer rows.Close()
+
+	profiles := []User{}
+	for rows.Next() {
+		var u User
+		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography, &u.SkillLevel, &u.PlayStyle)
+		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+		u.GamesPlayed = queryStrings(db, `SELECT game_name FROM user_games WHERE user_id = ?`, u.ID)
+		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 6`, u.ID)
+		profiles = append(profiles, u)
+	}
+	c.JSON(http.StatusOK, profiles)
+}
+
+func handleSwipe(c *gin.Context) {
+	userID := currentUserID(c)
+
+	var req SwipeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+
+	_, err := db.Exec(
+		`INSERT OR IGNORE INTO swipes (swiper_id, target_id, direction, created_at) VALUES (?, ?, ?, ?)`,
+		userID, req.TargetID, req.Direction, time.Now(),
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+
+	resp := MatchResponse{}
+	if req.Direction == "like" {
+		var reverseID int
+		err := db.QueryRow(
+			`SELECT id FROM swipes WHERE swiper_id = ? AND target_id = ? AND direction = 'like'`,
+			req.TargetID, userID,
+		).Scan(&reverseID)
+		if err == nil {
+			var matchID int
+			err2 := db.QueryRow(
+				`SELECT id FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`,
+				userID, req.TargetID, req.TargetID, userID,
+			).Scan(&matchID)
+			if err2 == sql.ErrNoRows {
+				res, _ := db.Exec(
+					`INSERT INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)`,
+					userID, req.TargetID, time.Now(),
+				)
+				id64, _ := res.LastInsertId()
+				matchID = int(id64)
+			}
+			resp.Matched = true
+			resp.MatchID = matchID
+		}
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func getMatches(c *gin.Context) {
+	userID := currentUserID(c)
+
+	rows, err := db.Query(`
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
+		FROM matches m
+		JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE m.user1_id = ? OR m.user2_id = ?
+		ORDER BY m.created_at DESC
+	`, userID, userID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+	defer rows.Close()
+
+	matches := []MatchEntry{}
+	for rows.Next() {
+		var u User
+		var me MatchEntry
+		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography,
+			&u.SkillLevel, &u.PlayStyle, &me.MatchID, &me.MatchedAt)
+		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 1`, u.ID)
+		me.User = u
+		matches = append(matches, me)
+	}
+	c.JSON(http.StatusOK, matches)
+}
+
+func deleteMatch(c *gin.Context) {
+	userID := currentUserID(c)
+	matchID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var u1, u2 int
+	err = db.QueryRow(`SELECT user1_id, user2_id FROM matches WHERE id = ?`, matchID).Scan(&u1, &u2)
+	if err != nil || (u1 != userID && u2 != userID) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	db.Exec(`DELETE FROM matches WHERE id = ?`, matchID)
+	c.JSON(http.StatusOK, gin.H{"ok": "unmatched"})
+}
+
+func uploadPhoto(c *gin.Context) {
+	userID := currentUserID(c)
+
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM user_photos WHERE user_id = ?`, userID).Scan(&count)
+	if count >= 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "max 6 photos"})
+		return
+	}
+
+	file, header, err := c.Request.FormFile("photo")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no file"})
+		return
+	}
+	defer file.Close()
+
+	uploadDir := "frontend/web/uploads/swipe"
+	os.MkdirAll(uploadDir, 0755)
+
+	filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), header.Filename)
+	dst, err := os.Create(filepath.Join(uploadDir, filename))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
+		return
+	}
+	defer dst.Close()
+
+	buf := make([]byte, 10<<20)
+	n, _ := file.Read(buf)
+	dst.Write(buf[:n])
+
+	photoPath := "/uploads/swipe/" + filename
+	db.Exec(`INSERT INTO user_photos (user_id, photo_path, position) VALUES (?, ?, ?)`,
+		userID, photoPath, count)
+
+	c.JSON(http.StatusOK, gin.H{"path": photoPath})
+}
+
+func deletePhoto(c *gin.Context) {
+	userID := currentUserID(c)
+	photoID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	db.Exec(`DELETE FROM user_photos WHERE id = ? AND user_id = ?`, photoID, userID)
+	c.JSON(http.StatusOK, gin.H{"ok": "deleted"})
+}
+
+func queryStrings(db *sql.DB, query string, args ...interface{}) []string {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return []string{}
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		rows.Scan(&s)
+		out = append(out, s)
+	}
+	if out == nil {
+		return []string{}
+	}
+	return out
+}
+
+func runMigrationsFromFile(db *sql.DB, filename string) error {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(string(content))
+	return err
 }
 
 func registerHandler(c *gin.Context) {
@@ -220,16 +428,16 @@ func registerHandler(c *gin.Context) {
         return
     }
 
-    _, err = db.Exec(`
-        INSERT INTO users (first_name, last_name, email, username, password_hash)
-        VALUES (?, ?, ?, ?, ?)
-    `, firstName, lastName, email, username, hashedPassword)
-    if err != nil {
-        c.HTML(http.StatusBadRequest, "home.html", gin.H{
-            "RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
-        })
-        return
-    }
+	_, err = db.Exec(`
+		INSERT INTO users (first_name, last_name, email, username, password_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, firstName, lastName, email, username, hashedPassword)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
+		})
+		return
+	}
 
     c.Redirect(http.StatusFound, "/login")
 }
@@ -312,14 +520,14 @@ func followUserHandler(c *gin.Context) {
         return
     }
 
-    _, err = db.Exec(`
-        INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
-        VALUES (?, ?, ?)
-    `, currentID, targetID, time.Now())
-    if err != nil {
-        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-        return
-    }
+	_, err = db.Exec(`
+		INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
+		VALUES (?, ?, ?)
+	`, currentID, targetID, time.Now())
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
 
     c.Redirect(http.StatusFound, "/users/"+strconv.Itoa(targetID))
 }
@@ -342,14 +550,14 @@ func unfollowUserHandler(c *gin.Context) {
         return
     }
 
-    _, err = db.Exec(`
-        DELETE FROM follows
-        WHERE follower_id = ? AND followed_id = ?
-    `, currentID, targetID)
-    if err != nil {
-        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-        return
-    }
+	_, err = db.Exec(`
+		DELETE FROM follows
+		WHERE follower_id = ? AND followed_id = ?
+	`, currentID, targetID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
 
     c.Redirect(http.StatusFound, "/users/"+strconv.Itoa(targetID))
 }
@@ -390,61 +598,52 @@ func getOtherUserProfile(c *gin.Context) {
         return
     }
 
-    var u User
-    err = db.QueryRow(`
-        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
-               COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
-        FROM users u
-        LEFT JOIN user_preferences up ON up.user_id = u.id
-        WHERE u.id = ?
-    `, targetID).Scan(
-        &u.ID,
-        &u.FirstName,
-        &u.LastName,
-        &u.Username,
-        &u.Biography,
-        &u.SkillLevel,
-        &u.PlayStyle,
-    )
-    if err == sql.ErrNoRows {
-        c.HTML(http.StatusNotFound, "404.html", gin.H{})
-        return
-    }
-    if err != nil {
-        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-        return
-    }
+	var u User
+	err = db.QueryRow(`
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
+		FROM users u
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE u.id = ?
+	`, targetID).Scan(
+		&u.ID,
+		&u.FirstName,
+		&u.LastName,
+		&u.Username,
+		&u.Biography,
+		&u.SkillLevel,
+		&u.PlayStyle,
+	)
+	if err == sql.ErrNoRows {
+		c.HTML(http.StatusNotFound, "404.html", gin.H{})
+		return
+	}
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
 
     u.GameTypes = []string{}
     u.GamesPlayed = []string{}
     u.Photos = []string{}
 
-    var followCount int
-    err = db.QueryRow(`
-        SELECT COUNT(*)
-        FROM follows
-        WHERE follower_id = ? AND followed_id = ?
-    `, currentID, targetID).Scan(&followCount)
-    if err != nil {
-        c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-        return
-    }
+	var followCount int
+	err = db.QueryRow(`
+		SELECT COUNT(*)
+		FROM follows
+		WHERE follower_id = ? AND followed_id = ?
+	`, currentID, targetID).Scan(&followCount)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		return
+	}
 
     isFollowing := followCount > 0
 
-    c.HTML(http.StatusOK, "user-profile.html", gin.H{
-        "User":        u,
-        "IsFollowing": isFollowing,
-    })
-}
-
-func runMigrationsFromFile(db *sql.DB, filename string) error {
-    content, err := os.ReadFile(filename)
-    if err != nil {
-        return err
-    }
-    _, err = db.Exec(string(content))
-    return err
+	c.HTML(http.StatusOK, "user-profile.html", gin.H{
+		"User":        u,
+		"IsFollowing": isFollowing,
+	})
 }
 
 func main() {
@@ -528,8 +727,28 @@ func main() {
         })
     })
 
-    r.GET("/create-post", authMiddleware(), postHandlers.ShowCreatePost(db))
-    r.POST("/create-post", authMiddleware(), postHandlers.SubmitCreatePost(db))
+	r.GET("/posts/:id", authMiddleware(), func(c *gin.Context) {
+		postID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "404.html", gin.H{})
+			return
+		}
+		userID := currentUserID(c)
+		pdb := &postDB.PostDB{DB: db}
+		post, err := pdb.GetPostByID(postID, userID)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
+		if post == nil {
+			c.HTML(http.StatusNotFound, "404.html", gin.H{})
+			return
+		}
+		c.HTML(http.StatusOK, "post-detail.html", gin.H{"Post": post})
+	})
+
+	r.GET("/create-post", authMiddleware(), postHandlers.ShowCreatePost(db))
+	r.POST("/create-post", authMiddleware(), postHandlers.SubmitCreatePost(db))
 
     r.GET("/edit-profile", authMiddleware(), func(c *gin.Context) {
         v, exists := c.Get("userID")
@@ -574,109 +793,100 @@ func main() {
         })
     })
 
-    r.POST("/edit-profile", authMiddleware(), func(c *gin.Context) {
-        v, exists := c.Get("userID")
-        if !exists {
-            c.Redirect(http.StatusFound, "/login")
-            return
-        }
-        userID, ok := v.(int)
-        if !ok || userID == 0 {
-            c.Redirect(http.StatusFound, "/login")
-            return
-        }
+	r.POST("/edit-profile", authMiddleware(), func(c *gin.Context) {
+		userID := currentUserID(c)
 
-        username := strings.TrimSpace(c.PostForm("username"))
-        email := strings.TrimSpace(c.PostForm("email"))
-        biography := strings.TrimSpace(c.PostForm("bio"))
+		username := strings.TrimSpace(c.PostForm("username"))
+		email := strings.TrimSpace(c.PostForm("email"))
+		biography := strings.TrimSpace(c.PostForm("bio"))
 
-        var avatarPath string
-        err := db.QueryRow(`
-            SELECT photo_path
-            FROM user_photos
-            WHERE user_id = ?
-            ORDER BY position ASC, id ASC
-            LIMIT 1
-        `, userID).Scan(&avatarPath)
-        if err != nil || avatarPath == "" {
-            avatarPath = "/static/images/default-avatar.png"
-        }
+		var avatarPath string
+		err := db.QueryRow(`
+			SELECT photo_path
+			FROM user_photos
+			WHERE user_id = ?
+			ORDER BY position ASC, id ASC
+			LIMIT 1
+		`, userID).Scan(&avatarPath)
+		if err != nil || avatarPath == "" {
+			avatarPath = "/static/images/default-avatar.png"
+		}
 
-        if username == "" || email == "" {
-            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
-                "Username":     username,
-                "Email":        email,
-                "Biography":    biography,
-                "AvatarPath":   avatarPath,
-                "ErrorMessage": "Le pseudo et l'email sont obligatoires.",
-            })
-            return
-        }
+		if username == "" || email == "" {
+			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+				"Username":     username,
+				"Email":        email,
+				"Biography":    biography,
+				"AvatarPath":   avatarPath,
+				"ErrorMessage": "Le pseudo et l'email sont obligatoires.",
+			})
+			return
+		}
 
-        if len([]rune(biography)) > 201 {
-            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
-                "Username":     username,
-                "Email":        email,
-                "Biography":    biography,
-                "AvatarPath":   avatarPath,
-                "ErrorMessage": "La biographie ne doit pas dépasser 200 caractères.",
-            })
-            return
-        }
+		if len([]rune(biography)) > 201 {
+			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+				"Username":     username,
+				"Email":        email,
+				"Biography":    biography,
+				"AvatarPath":   avatarPath,
+				"ErrorMessage": "La biographie ne doit pas dépasser 200 caractères.",
+			})
+			return
+		}
 
-        _, err = db.Exec(`
-            UPDATE users
-            SET username = ?, email = ?, biography = ?
-            WHERE id = ?
-        `, username, email, biography, userID)
-        if err != nil {
-            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
-                "Username":     username,
-                "Email":        email,
-                "Biography":    biography,
-                "AvatarPath":   avatarPath,
-                "ErrorMessage": "Impossible de mettre à jour le profil. Email ou pseudo peut-être déjà utilisé.",
-            })
-            return
-        }
+		_, err = db.Exec(`
+			UPDATE users
+			SET username = ?, email = ?, biography = ?
+			WHERE id = ?
+		`, username, email, biography, userID)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+				"Username":     username,
+				"Email":        email,
+				"Biography":    biography,
+				"AvatarPath":   avatarPath,
+				"ErrorMessage": "Impossible de mettre à jour le profil. Email ou pseudo peut-être déjà utilisé.",
+			})
+			return
+		}
 
-        file, err := c.FormFile("avatar")
-        if err == nil && file != nil {
-            uploadDir := "frontend/web/uploads/profile"
-            os.MkdirAll(uploadDir, 0755)
+		file, err := c.FormFile("avatar")
+		if err == nil && file != nil {
+			uploadDir := "frontend/web/uploads/profile"
+			os.MkdirAll(uploadDir, 0755)
 
-            filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), filepath.Base(file.Filename))
-            dst := filepath.Join(uploadDir, filename)
+			filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), filepath.Base(file.Filename))
+			dst := filepath.Join(uploadDir, filename)
 
-            if err := c.SaveUploadedFile(file, dst); err == nil {
-                photoPath := "/uploads/profile/" + filename
+			if err := c.SaveUploadedFile(file, dst); err == nil {
+				photoPath := "/uploads/profile/" + filename
 
-                var existingPhotoID int
-                err = db.QueryRow(`
-                    SELECT id
-                    FROM user_photos
-                    WHERE user_id = ?
-                    ORDER BY position ASC, id ASC
-                    LIMIT 1
-                `, userID).Scan(&existingPhotoID)
+				var existingPhotoID int
+				err = db.QueryRow(`
+					SELECT id
+					FROM user_photos
+					WHERE user_id = ?
+					ORDER BY position ASC, id ASC
+					LIMIT 1
+				`, userID).Scan(&existingPhotoID)
 
-                if err == nil {
-                    db.Exec(`
-                        UPDATE user_photos
-                        SET photo_path = ?
-                        WHERE id = ?
-                    `, photoPath, existingPhotoID)
-                } else {
-                    db.Exec(`
-                        INSERT INTO user_photos (user_id, photo_path, position)
-                        VALUES (?, ?, 0)
-                    `, userID, photoPath)
-                }
-            }
-        }
+				if err == nil {
+					db.Exec(`
+						UPDATE user_photos
+						SET photo_path = ?
+						WHERE id = ?
+					`, photoPath, existingPhotoID)
+				} else {
+					db.Exec(`
+						INSERT INTO user_photos (user_id, photo_path, position)
+						VALUES (?, ?, 0)
+					`, userID, photoPath)
+				}
+			}
+		}
 
-        c.Redirect(http.StatusFound, "/profile")
-    })
+		c.Redirect(http.StatusFound, "/profile")
+	})
 
     r.GET("/profile", authMiddleware(), func(c *gin.Context) {
         v, exists := c.Get("userID")
@@ -690,68 +900,68 @@ func main() {
             return
         }
 
-        var username, biography, createdAt string
-        err := db.QueryRow(`
-            SELECT username, COALESCE(biography, ''), created_at
-            FROM users
-            WHERE id = ?
-        `, userID).Scan(&username, &biography, &createdAt)
-        if err != nil {
-            c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-            return
-        }
+		var username, biography, createdAt string
+		err := db.QueryRow(`
+			SELECT username, COALESCE(biography, ''), created_at
+			FROM users
+			WHERE id = ?
+		`, userID).Scan(&username, &biography, &createdAt)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
 
-        var postCount int
-        err = db.QueryRow(`
-            SELECT COUNT(*)
-            FROM posts
-            WHERE user_id = ?
-        `, userID).Scan(&postCount)
-        if err != nil {
-            postCount = 0
-        }
+		var postCount int
+		err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM posts
+			WHERE user_id = ?
+		`, userID).Scan(&postCount)
+		if err != nil {
+			postCount = 0
+		}
 
-        var followersCount int
-        err = db.QueryRow(`
-            SELECT COUNT(*)
-            FROM matches
-            WHERE user1_id = ? OR user2_id = ?
-        `, userID, userID).Scan(&followersCount)
-        if err != nil {
-            followersCount = 0
-        }
+		var followersCount int
+		err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM matches
+			WHERE user1_id = ? OR user2_id = ?
+		`, userID, userID).Scan(&followersCount)
+		if err != nil {
+			followersCount = 0
+		}
 
-        var avatarPath string
-        err = db.QueryRow(`
-            SELECT photo_path
-            FROM user_photos
-            WHERE user_id = ?
-            ORDER BY position ASC, id ASC
-            LIMIT 1
-        `, userID).Scan(&avatarPath)
-        if err != nil || avatarPath == "" {
-            avatarPath = "/static/images/default-avatar.png"
-        }
+		var avatarPath string
+		err = db.QueryRow(`
+			SELECT photo_path
+			FROM user_photos
+			WHERE user_id = ?
+			ORDER BY position ASC, id ASC
+			LIMIT 1
+		`, userID).Scan(&avatarPath)
+		if err != nil || avatarPath == "" {
+			avatarPath = "/static/images/default-avatar.png"
+		}
 
-        rows, err := db.Query(`
-            SELECT
-                p.id,
-                p.title,
-                p.content,
-                COALESCE(p.image_path, ''),
-                strftime('%d/%m/%Y', p.created_at) as created_at,
-                COALESCE(SUM(CASE WHEN pr.reaction_type = 'like' THEN 1 ELSE 0 END), 0) as likes
-            FROM posts p
-            LEFT JOIN post_reactions pr ON pr.post_id = p.id
-            WHERE p.user_id = ?
-            GROUP BY p.id
-            ORDER BY p.created_at DESC
-        `, userID)
-        if err != nil {
-            c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-            return
-        }
-        defer rows.Close()
+		rows, err := db.Query(`
+			SELECT
+				p.id,
+				p.title,
+				p.content,
+				COALESCE(p.image_path, ''),
+				strftime('%d/%m/%Y', p.created_at) as created_at,
+				COALESCE(SUM(CASE WHEN pr.reaction_type = 'like' THEN 1 ELSE 0 END), 0) as likes
+			FROM posts p
+			LEFT JOIN post_reactions pr ON pr.post_id = p.id
+			WHERE p.user_id = ?
+			GROUP BY p.id
+			ORDER BY p.created_at DESC
+		`, userID)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
+		}
+		defer rows.Close()
 
         var posts []ProfilePost
         for rows.Next() {
@@ -796,9 +1006,17 @@ func main() {
     r.POST("/users/:id/follow", authMiddleware(), followUserHandler)
     r.POST("/users/:id/unfollow", authMiddleware(), unfollowUserHandler)
 
-    r.NoRoute(func(c *gin.Context) {
-        c.HTML(http.StatusNotFound, "404.html", gin.H{})
-    })
+	ldb := &likeDB.LikeDB{DB: db}
+	lh := &likeH.LikeHandler{DB: ldb}
+
+	cdb := &commentDB.CommentDB{DB: db}
+	ch := &commentH.CommentHandler{DB: cdb}
+
+	steamGroup := r.Group("/", authMiddleware())
+	{
+		steamGroup.GET("/account/steam/link", steamLinkHandler)
+		steamGroup.GET("/auth/steam/callback", steamCallbackHandler)
+	}
 
     steamGroup := r.Group("/", authMiddleware())
     {
@@ -809,24 +1027,37 @@ func main() {
     swipeAPI := r.Group("/api/swipe", authMiddleware())
     swipeService.RegisterRoutes(swipeAPI)
 
-    usersAPI := r.Group("/api/users", authMiddleware())
-    {
-        usersAPI.GET("/search", func(c *gin.Context) {
-            currentID := 0
-            if v, exists := c.Get("userID"); exists {
-                if id, ok := v.(int); ok {
-                    currentID = id
-                }
-            }
-            searchService.SearchUsersAPI(c, currentID)
-        })
-    }
+	postsAPI := r.Group("/api/posts", authMiddleware())
+	{
+		postsAPI.POST("/:id/like", func(c *gin.Context) {
+			c.Set("reaction", "like")
+			lh.ReactToPost(c)
+		})
+		postsAPI.POST("/:id/dislike", func(c *gin.Context) {
+			c.Set("reaction", "dislike")
+			lh.ReactToPost(c)
+		})
 
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
+		postsAPI.GET("/:id/comments", ch.ListComments)
+		postsAPI.POST("/:id/comments", ch.CreateComment)
+		postsAPI.PUT("/:id/comments/:comment_id", ch.UpdateComment)
+		postsAPI.DELETE("/:id/comments/:comment_id", ch.DeleteComment)
 
-    log.Printf("Serveur lancé sur http://localhost:%s", port)
-    log.Fatal(r.Run(":" + port))
+		postsAPI.POST("/:id/comments/:comment_id/like", func(c *gin.Context) {
+			c.Set("reaction", "like")
+			lh.ReactToComment(c)
+		})
+		postsAPI.POST("/:id/comments/:comment_id/dislike", func(c *gin.Context) {
+			c.Set("reaction", "dislike")
+			lh.ReactToComment(c)
+		})
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Serveur lancé sur http://localhost:%s", port)
+	log.Fatal(r.Run(":" + port))
 }

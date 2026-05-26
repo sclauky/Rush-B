@@ -1,0 +1,401 @@
+/* ── Layout page ── */
+.post-detail-page {
+  min-height: 100vh;
+  padding: 2rem 0 4rem;
+}
+.post-detail-container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ── Breadcrumb ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.82rem;
+  text-decoration: none;
+  margin-bottom: 1.75rem;
+  transition: color 0.18s;
+}
+.back-link:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+.back-link svg {
+  flex-shrink: 0;
+}
+
+/* ── Card post principal ── */
+.post-full {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.post-full-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.post-full-author {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.post-full-author:hover {
+  color: #fff;
+}
+.post-full-author strong {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+.post-full-date {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.78rem;
+  margin-left: auto;
+}
+
+.post-full h1 {
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(1.3rem, 3vw, 1.9rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 1rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.post-full-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+.post-tag {
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.post-full-content {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.97rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  margin-bottom: 1.5rem;
+}
+
+.post-full-image {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  object-fit: cover;
+  max-height: 480px;
+}
+
+/* ── Réactions post ── */
+.post-reactions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-wrap: wrap;
+}
+
+.reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s,
+    transform 0.1s;
+  line-height: 1;
+  font-weight: 500;
+}
+.reaction-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.reaction-btn:active {
+  transform: scale(0.94);
+}
+.reaction-btn.active-like {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+}
+.reaction-btn.active-dislike {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.reactions-spacer {
+  flex: 1;
+}
+.comment-count-info {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.82rem;
+}
+
+/* ── Section commentaires ── */
+.comments-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+}
+.comments-section h2 {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 1.4rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Formulaire nouveau commentaire */
+.new-comment-form {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-end;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.new-comment-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: none;
+  min-height: 48px;
+  max-height: 160px;
+  transition: border-color 0.18s;
+  line-height: 1.5;
+}
+.new-comment-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+.new-comment-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.6);
+}
+.new-comment-submit {
+  padding: 0.65rem 1.35rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 0.18s,
+    transform 0.1s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.new-comment-submit:hover {
+  opacity: 0.85;
+}
+.new-comment-submit:active {
+  transform: scale(0.95);
+}
+.new-comment-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Liste commentaires */
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.comment-item {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  transition: border-color 0.18s;
+}
+.comment-item:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+  flex-wrap: wrap;
+}
+.comment-author {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.comment-author:hover {
+  color: #fff;
+}
+.comment-date {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.75rem;
+}
+.comment-own-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.25rem;
+}
+.comment-action-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.comment-action-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.comment-action-btn.delete:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.comment-content {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+}
+
+/* Réactions commentaire */
+.comment-reactions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.comment-reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.comment-reaction-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.comment-reaction-btn.active-like {
+  border-color: #4ade80;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+.comment-reaction-btn.active-dislike {
+  border-color: #f87171;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* Édition inline */
+.comment-edit-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+  align-items: flex-end;
+}
+.comment-edit-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.88rem;
+}
+.comment-edit-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.6);
+}
+.comment-edit-save,
+.comment-edit-cancel {
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.comment-edit-save {
+  background: #6366f1;
+  color: #fff;
+}
+.comment-edit-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.comments-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.88rem;
+  padding: 1.5rem 0;
+}
+
+.comments-loading {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
