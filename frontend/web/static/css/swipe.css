@@ -392,14 +392,6 @@
       box-shadow: 0 0 32px rgba(87,242,135,.4);
       border-color: rgba(87,242,135,.7);
     }
-    .action-super {
-      width: 52px; height: 52px; font-size: 1.3rem;
-      border-color: rgba(0,212,255,.3); color: var(--primary-2);
-    }
-    .action-super:hover {
-      background: rgba(0,212,255,.12);
-      box-shadow: 0 0 24px rgba(0,212,255,.3);
-    }
 
     .swipe-hint {
       text-align: center; color: var(--muted);
@@ -604,3 +596,11 @@
       .card-stack { width: 100%; height: 560px; }
       .swipe-title { font-size: 1.5rem; }
     }
+
+    .swipe-card {
+  pointer-events: none;
+}
+
+.swipe-card.is-top {
+  pointer-events: auto;
+}

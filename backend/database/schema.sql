@@ -219,3 +219,27 @@ WHERE u.id != ?
   AND u.username LIKE ?
 ORDER BY u.username ASC
 LIMIT 20;
+
+-- swipe
+SELECT
+    u.id,
+    u.username,
+    u.biography,
+    COALESCE((
+        SELECT photo_path
+        FROM user_photos
+        WHERE user_id = u.id
+        ORDER BY position ASC, id ASC
+        LIMIT 1
+    ), '') AS avatar
+FROM users u
+WHERE u.id != ?
+  AND u.show_in_finder = 1
+  AND NOT EXISTS (
+      SELECT 1
+      FROM swipes s
+      WHERE s.swiper_id = ?
+        AND s.target_id = u.id
+  )
+ORDER BY u.created_at DESC
+LIMIT 50;

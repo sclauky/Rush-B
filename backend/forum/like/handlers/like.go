@@ -47,7 +47,7 @@ func (h *LikeHandler) ReactToPost(c *gin.Context) {
 
 	// On déduit le type de réaction depuis l'URL
 	// /posts/:id/like → "like" | /posts/:id/dislike → "dislike"
-	reactionType := c.Param("reaction") // "like" ou "dislike"
+	reactionType := c.GetString("reaction") // "like" ou "dislike"
 	if reactionType != "like" && reactionType != "dislike" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "réaction invalide"})
 		return
@@ -88,7 +88,7 @@ func (h *LikeHandler) ReactToComment(c *gin.Context) {
 		return
 	}
 
-	reactionType := c.Param("reaction")
+	reactionType := c.GetString("reaction")
 	if reactionType != "like" && reactionType != "dislike" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "réaction invalide"})
 		return
