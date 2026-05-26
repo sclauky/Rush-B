@@ -188,14 +188,16 @@ function buildCards(stack, data) {
 
 function setTopCard() {
   const cards = qsa(".swipe-card");
+  cards.forEach((c) => c.classList.remove("is-top"));
+
   if (cards.length === 0) {
     currentCard = null;
     return;
   }
-  const sorted = cards.sort((a, b) => {
-    return Number(b.dataset.index) - Number(a.dataset.index);
-  });
-  currentCard = sorted[0];
+
+  currentCard = cards[cards.length - 1];
+  currentCard.classList.add("is-top");
+
   resetCardTransform(currentCard);
 }
 
