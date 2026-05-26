@@ -39,30 +39,7 @@
         radial-gradient(circle at bottom center, rgba(255,79,216,0.10), transparent 35%),
         linear-gradient(180deg, #080810 0%, #0b0b14 100%);
     }
-    
-    .site-bg::after {
-      content: "";
-      position: fixed; inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent,
-        transparent 3px,
-        var(--sw-scanline) 3px,
-        var(--sw-scanline) 4px
-      );
-      opacity: 0.25;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .site-bg::before {
-      content: "";
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(var(--sw-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--sw-grid) 1px, transparent 1px);
-      background-size: 60px 60px;
-      pointer-events: none;
-    }
+  
 
     .navbar {
       position: sticky; top: 0; z-index: 100;
