@@ -98,6 +98,21 @@
           <a href="/account/steam/link" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
               Lier le compte Steam
           </a>
+
+          {{if .TwoFAEnabled}}
+  <form method="POST" action="/auth/2fa/disable">
+    <button type="submit" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">
+      🔓 Désactiver la double authentification
+    </button>
+  </form>
+{{else}}
+  <form method="POST" action="/auth/2fa/enable">
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+      🔐 Activer la double authentification
+    </button>
+  </form>
+{{end}}
+
         </div>
 
         <div class="posts-grid">

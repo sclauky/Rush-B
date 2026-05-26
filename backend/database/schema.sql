@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     birth_date DATE,
     biography TEXT,
     show_in_finder INTEGER NOT NULL DEFAULT 0 CHECK (show_in_finder IN (0, 1)),
-    steam_id TEXT UNIQUE
+    steam_id TEXT UNIQUE,
+    two_fa_enabled INTEGER NOT NULL DEFAULT 0 CHECK (two_fa_enabled IN (0,1))
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -243,6 +244,3 @@ WHERE u.id != ?
   )
 ORDER BY u.created_at DESC
 LIMIT 50;
-
-ALTER TABLE users ADD COLUMN two_fa_enabled INTEGER NOT NULL DEFAULT 0 CHECK 
-(two_fa_enabled IN (0,1));

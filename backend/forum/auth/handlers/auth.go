@@ -16,8 +16,8 @@ import (
 
 type RegisterRequest struct {
 	Username  string `form:"username"  json:"username"  binding:"required"`
-	FirstName string `form:"Firstname" json:"first_name" binding:"required"`
-	LastName  string `form:"Lastname"  json:"last_name"  binding:"required"`
+	FirstName string `form:"firstname" json:"first_name" binding:"required"`
+	LastName  string `form:"lastname"  json:"last_name"  binding:"required"`
 	Email     string `form:"email"     json:"email"      binding:"required,email"`
 	Password  string `form:"password"  json:"password"   binding:"required,min=6"`
 }

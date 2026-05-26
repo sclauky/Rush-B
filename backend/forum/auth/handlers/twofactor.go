@@ -131,10 +131,10 @@ func Verify2FAHandler(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Supprimer le cookie temporaire
-		c.SetCookie("pending_2fa_user", "", -1, "/", "", false, true)
+		c.SetCookie("pending_2fa_user", "", -1, "/", "", false, false)
 
 		// Poser le vrai cookie de session
-		c.SetCookie("session_token", sessionToken, int(7*24*time.Hour.Seconds()), "/", "", false, true)
+		c.SetCookie("session_token", sessionToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, false)
 
 		// Redirection HTML ou réponse JSON selon le client
 		if c.GetHeader("Accept") == "application/json" {
@@ -162,13 +162,13 @@ func Resend2FAHandler(db *sql.DB) gin.HandlerFunc {
 		`, pendingUserID).Scan(&lastCreated)
 
 		if err == nil && time.Since(lastCreated) < time.Minute {
-    remaining := time.Minute - time.Since(lastCreated)
-    c.JSON(http.StatusTooManyRequests, gin.H{
-        "error":    "trop de demandes",
-        "retry_in": int(remaining.Seconds()),
-    })
-    return
-}
+			remaining := time.Minute - time.Since(lastCreated)
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":    "trop de demandes",
+				"retry_in": int(remaining.Seconds()),
+			})
+			return
+		}
 
 		var email, firstName string
 		var userID int

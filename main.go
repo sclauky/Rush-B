@@ -425,11 +425,35 @@ func main() {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
 
+	r.GET("/register", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "register.html", gin.H{})
+	})
 	r.GET("/logout", authHandlers.LogoutHandler(db))
 	r.POST("/login", authHandlers.LoginHandler(db))
 	r.POST("/register", authHandlers.RegisterHandler(db))
+
+	r.GET("/verify-2fa", func(c *gin.Context) {
+		if _, err := c.Cookie("pending_2fa_user"); err != nil {
+			c.Redirect(http.StatusSeeOther, "/login")
+			return
+		}
+		c.HTML(http.StatusOK, "verify-2fa.html", gin.H{})
+	})
+
 	r.POST("/auth/2fa/verify", authHandlers.Verify2FAHandler(db))
 	r.POST("/auth/2fa/resend", authHandlers.Resend2FAHandler(db))
+
+	r.POST("/auth/2fa/enable", authMiddleware(), func(c *gin.Context) {
+		userID := currentUserID(c)
+		db.Exec(`UPDATE users SET two_fa_enabled = 1 WHERE id = ?`, userID)
+		c.Redirect(http.StatusSeeOther, "/profile")
+	})
+
+	r.POST("/auth/2fa/disable", authMiddleware(), func(c *gin.Context) {
+		userID := currentUserID(c)
+		db.Exec(`UPDATE users SET two_fa_enabled = 0 WHERE id = ?`, userID)
+		c.Redirect(http.StatusSeeOther, "/profile")
+	})
 
 	r.GET("/posts", authMiddleware(), func(c *gin.Context) {
 		pdb := &postDB.PostDB{DB: db}
@@ -597,11 +621,13 @@ func main() {
 		userID := currentUserID(c)
 
 		var username, biography, createdAt string
+		var twoFAEnabled bool
 		err := db.QueryRow(`
-			SELECT username, COALESCE(biography, ''), created_at
-			FROM users
-			WHERE id = ?
-		`, userID).Scan(&username, &biography, &createdAt)
+    SELECT username, COALESCE(biography, ''), created_at, two_fa_enabled
+    FROM users
+    WHERE id = ?
+`, userID).Scan(&username, &biography, &createdAt, &twoFAEnabled)
+
 		if err != nil {
 			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
 			return
@@ -691,6 +717,7 @@ func main() {
 			"JoinedDate":     joinedDate,
 			"AvatarPath":     avatarPath,
 			"Posts":          posts,
+			"TwoFAEnabled":   twoFAEnabled,
 		})
 	})
 
