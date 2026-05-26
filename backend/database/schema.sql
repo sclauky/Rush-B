@@ -243,3 +243,6 @@ WHERE u.id != ?
   )
 ORDER BY u.created_at DESC
 LIMIT 50;
+
+ALTER TABLE users ADD COLUMN two_fa_enabled INTEGER NOT NULL DEFAULT 0 CHECK 
+(two_fa_enabled IN (0,1));

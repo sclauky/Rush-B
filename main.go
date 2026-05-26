@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"socialauth/backend/forum/auth/utils"
+	authHandlers "socialauth/backend/forum/auth/handlers"
 	commentDB "socialauth/backend/forum/comment/db"
 	commentH "socialauth/backend/forum/comment/handlers"
 	likeDB "socialauth/backend/forum/like/db"
@@ -213,96 +213,6 @@ func steamCallbackHandler(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, "/profile")
-}
-
-func registerHandler(c *gin.Context) {
-	username := strings.TrimSpace(c.PostForm("username"))
-	firstName := strings.TrimSpace(c.PostForm("first_name"))
-	lastName := strings.TrimSpace(c.PostForm("last_name"))
-	email := strings.TrimSpace(c.PostForm("email"))
-	password := c.PostForm("password")
-	confirmPassword := c.PostForm("confirm_password")
-
-	if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"RegisterError": "Tous les champs sont obligatoires"})
-		return
-	}
-
-	if password != confirmPassword {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"ConfirmPasswordError": "Les mots de passe ne correspondent pas"})
-		return
-	}
-
-	if !utils.IsValidPassword(password) {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"PasswordError": "Le mot de passe doit contenir au moins 7 caractères, une majuscule, une minuscule et un chiffre."})
-		return
-	}
-
-	hashedPassword, err := utils.HashPassword(password)
-	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-		return
-	}
-
-	_, err = db.Exec(`
-		INSERT INTO users (first_name, last_name, email, username, password_hash)
-		VALUES (?, ?, ?, ?, ?)
-	`, firstName, lastName, email, username, hashedPassword)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé."})
-		return
-	}
-
-	c.Redirect(http.StatusFound, "/login")
-}
-
-func loginHandler(c *gin.Context) {
-	email := strings.TrimSpace(c.PostForm("email"))
-	password := c.PostForm("password")
-
-	if email == "" || password == "" {
-		c.HTML(http.StatusBadRequest, "login.html", gin.H{"Error": "Email et mot de passe obligatoires"})
-		return
-	}
-
-	var userID int
-	var passwordHash string
-
-	err := db.QueryRow(`SELECT id, password_hash FROM users WHERE email = ?`, email).Scan(&userID, &passwordHash)
-	if err != nil {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{"Error": "Identifiants invalides"})
-		return
-	}
-
-	if !utils.CheckPassword(password, passwordHash) {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{"Error": "Identifiants invalides"})
-		return
-	}
-
-	sessionToken := fmt.Sprintf("%d_%d", userID, time.Now().UnixNano())
-	expiresAt := time.Now().Add(24 * time.Hour)
-
-	_, err = db.Exec(
-		`INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)`,
-		userID, sessionToken, expiresAt,
-	)
-	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
-		return
-	}
-
-	c.SetCookie("session_token", sessionToken, 86400, "/", "", false, true)
-	c.Redirect(http.StatusFound, "/profile")
-}
-
-func logoutHandler(c *gin.Context) {
-	token, err := c.Cookie("session_token")
-	if err == nil && token != "" {
-		db.Exec(`DELETE FROM sessions WHERE session_token = ?`, token)
-	}
-
-	c.SetCookie("session_token", "", -1, "/", "", false, true)
-	c.Redirect(http.StatusFound, "/")
 }
 
 func followUserHandler(c *gin.Context) {
@@ -511,13 +421,15 @@ func main() {
 		})
 	})
 
-	r.GET("/logout", logoutHandler)
-
 	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
-	r.POST("/login", loginHandler)
-	r.POST("/register", registerHandler)
+
+	r.GET("/logout", authHandlers.LogoutHandler(db))
+	r.POST("/login", authHandlers.LoginHandler(db))
+	r.POST("/register", authHandlers.RegisterHandler(db))
+	r.POST("/auth/2fa/verify", authHandlers.Verify2FAHandler(db))
+	r.POST("/auth/2fa/resend", authHandlers.Resend2FAHandler(db))
 
 	r.GET("/posts", authMiddleware(), func(c *gin.Context) {
 		pdb := &postDB.PostDB{DB: db}
