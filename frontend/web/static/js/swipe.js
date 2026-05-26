@@ -195,6 +195,7 @@ function setTopCard() {
     return;
   }
 
+  // top visuel = dernière carte dans le DOM
   currentCard = cards[cards.length - 1];
   currentCard.classList.add("is-top");
 
@@ -309,7 +310,6 @@ function removeCurrentCardAfterAnim() {
 }
 
 function setTopCardIfAny() {
-  const stack = qs("#card-stack");
   const cards = qsa(".swipe-card");
   if (cards.length === 0) {
     currentCard = null;
@@ -336,6 +336,7 @@ async function sendSwipe(targetId, direction) {
     const data = await res.json();
     if (data.matched) {
       openMatchModal(targetId);
+      fetchMatches(); // on rafraîchit la liste des matchs
     }
   } catch (e) {
     console.error(e);
@@ -384,7 +385,231 @@ function openMatchModal(targetId) {
   };
 }
 
+/* ---------- MATCHES (sidebar + full view) ---------- */
+
+async function fetchMatches() {
+  try {
+    const res = await fetch(`${API_BASE}/matches`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) throw new Error("matches fetch error");
+
+    const matches = await res.json();
+    renderMatchesSidebar(matches);
+    renderMatchesGrid(matches);
+  } catch (e) {
+    console.error("Error fetching matches:", e);
+  }
+}
+
+function renderMatchesSidebar(matches) {
+  const list = qs("#matches-sidebar-list");
+  const countBadge = qs("#match-sidebar-count");
+
+  list.innerHTML = "";
+
+  if (!matches || matches.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "matches-empty";
+    empty.innerHTML = `
+      <div class="matches-empty-icon">🎯</div>
+      <p>Tes smash apparaîtront ici. Continue à swiper !</p>
+    `;
+    list.appendChild(empty);
+    countBadge.textContent = "0";
+    return;
+  }
+
+  countBadge.textContent = matches.length.toString();
+
+  matches.forEach((m) => {
+    const u = m.user || {};
+    const card = document.createElement("div");
+    card.className = "match-card";
+
+    const avatar = document.createElement("div");
+    avatar.className = "match-avatar";
+
+    if (u.photos && u.photos.length > 0) {
+      const img = document.createElement("img");
+      img.src = u.photos[0];
+      avatar.appendChild(img);
+    }
+
+    const txt = document.createElement("div");
+    txt.className = "match-avatar-text";
+    txt.textContent = (u.username && u.username[0].toUpperCase()) || "?";
+    avatar.appendChild(txt);
+
+    const info = document.createElement("div");
+    info.className = "match-info";
+
+    const name = document.createElement("div");
+    name.className = "match-name";
+    name.textContent =
+      (u.first_name || "") + " " + (u.last_name || "");
+
+    const tags = document.createElement("div");
+    tags.className = "match-tags";
+
+    if (u.play_style) {
+      const t = document.createElement("div");
+      t.className = "match-tag";
+      t.textContent = u.play_style;
+      tags.appendChild(t);
+    }
+
+    if (u.skill_level) {
+      const t = document.createElement("div");
+      t.className = "match-tag";
+      t.textContent = u.skill_level;
+      tags.appendChild(t);
+    }
+
+    info.appendChild(name);
+    info.appendChild(tags);
+
+    const dot = document.createElement("div");
+    dot.className = "match-new";
+
+    card.appendChild(avatar);
+    card.appendChild(info);
+    card.appendChild(dot);
+
+    list.appendChild(card);
+  });
+}
+
+function renderMatchesGrid(matches) {
+  const grid = qs("#matches-full-grid");
+  grid.innerHTML = "";
+
+  if (!matches || matches.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "matches-empty";
+    empty.style.gridColumn = "1/-1";
+    empty.style.padding = "4rem 0";
+    empty.innerHTML = `
+      <div class="matches-empty-icon">🎮</div>
+      <p>Aucun smash pour le moment. Va swiper !</p>
+    `;
+    grid.appendChild(empty);
+    return;
+  }
+
+  matches.forEach((m) => {
+    const u = m.user || {};
+    const card = document.createElement("div");
+    card.className = "match-full-card";
+
+    const top = document.createElement("div");
+    top.className = "match-full-top";
+
+    const avatar = document.createElement("div");
+    avatar.className = "match-full-avatar";
+
+    if (u.photos && u.photos.length > 0) {
+      const img = document.createElement("img");
+      img.src = u.photos[0];
+      avatar.appendChild(img);
+    } else {
+      const span = document.createElement("span");
+      span.className = "match-m-avatar-text";
+      span.textContent =
+        (u.username && u.username[0].toUpperCase()) || "?";
+      avatar.appendChild(span);
+    }
+
+    const info = document.createElement("div");
+    const name = document.createElement("div");
+    name.className = "match-full-name";
+    name.textContent =
+      (u.first_name || "") + " " + (u.last_name || "");
+
+    const username = document.createElement("div");
+    username.className = "match-full-username";
+    username.textContent = "@" + (u.username || "unknown");
+
+    const date = document.createElement("div");
+    date.className = "match-full-date";
+    date.textContent = formatMatchDate(m.matched_at);
+
+    info.appendChild(name);
+    info.appendChild(username);
+    info.appendChild(date);
+
+    top.appendChild(avatar);
+    top.appendChild(info);
+
+    const tags = document.createElement("div");
+    tags.className = "match-full-tags";
+
+    if (u.play_style) {
+      const t = document.createElement("div");
+      t.className = "match-tag";
+      t.textContent = u.play_style;
+      tags.appendChild(t);
+    }
+
+    if (u.skill_level) {
+      const t = document.createElement("div");
+      t.className = "match-tag";
+      t.textContent = u.skill_level;
+      tags.appendChild(t);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "match-full-actions";
+
+    const btnProfile = document.createElement("button");
+    btnProfile.className = "btn btn-primary btn-sm";
+    btnProfile.textContent = "Voir le profil";
+    btnProfile.addEventListener("click", () => {
+      window.location.href = `/users/${u.id}`;
+    });
+
+    const btnUnmatch = document.createElement("button");
+    btnUnmatch.className = "btn btn-unmatch btn-sm";
+    btnUnmatch.textContent = "Unmatch";
+    btnUnmatch.addEventListener("click", () => {
+      handleUnmatch(m.match_id);
+    });
+
+    actions.appendChild(btnProfile);
+    actions.appendChild(btnUnmatch);
+
+    card.appendChild(top);
+    card.appendChild(tags);
+    card.appendChild(actions);
+
+    grid.appendChild(card);
+  });
+}
+
+function formatMatchDate(isoString) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return "";
+  return `Matché le ${d.toLocaleDateString("fr-FR")}`;
+}
+
+async function handleUnmatch(matchId) {
+  if (!confirm("Supprimer ce smash ?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/matches/${matchId}`, {
+      method: "DELETE",
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return;
+    fetchMatches();
+  } catch (e) {
+    console.error("Error unmatching:", e);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   attachEvents();
   fetchProfiles();
+  fetchMatches();
 });
