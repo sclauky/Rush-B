@@ -58,7 +58,7 @@ Rush-B/
 
 ### 1. Prérequis
 
-- Docker Desktop installé et en cours d’exécution (Windows / macOS / Linux) 
+- Docker Desktop installé et apres avoir lancé l'application (Windows / macOS / Linux) 
 
 ### 2. Construction et lancement
 
