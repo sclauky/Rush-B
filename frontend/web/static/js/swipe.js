@@ -335,8 +335,7 @@
       closeMatchModal();
       document.getElementById('tab-matches').click();
     }
-
-    // Tab switching
+    
     document.getElementById('tab-swipe').addEventListener('click', () => {
       document.getElementById('tab-swipe').classList.add('active');
       document.getElementById('tab-matches').classList.remove('active');
@@ -351,17 +350,16 @@
       loadMatches();
     });
 
-    // Action buttons
+
     document.getElementById('btn-like').addEventListener('click', () => doSwipe('like'));
     document.getElementById('btn-pass').addEventListener('click', () => doSwipe('pass'));
     document.getElementById('btn-super').addEventListener('click', () => doSwipe('like'));
 
-    // Keyboard
+  
     document.addEventListener('keydown', e => {
       if (e.key === 'ArrowRight') doSwipe('like');
       if (e.key === 'ArrowLeft') doSwipe('pass');
     });
 
-    // Init
     loadProfiles();
     loadMatches();
