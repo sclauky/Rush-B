@@ -478,7 +478,8 @@ func loginHandler(c *gin.Context) {
 
 	if email == "" || password == "" {
 		c.HTML(http.StatusBadRequest, "login.html", gin.H{
-			"Error": "Email et mot de passe obligatoires",
+			"Error":           "Email et mot de passe obligatoires",
+			"IsAuthenticated": false,
 		})
 		return
 	}
@@ -489,14 +490,16 @@ func loginHandler(c *gin.Context) {
 	err := db.QueryRow(`SELECT id, password_hash FROM users WHERE email = ?`, email).Scan(&userID, &passwordHash)
 	if err != nil {
 		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
-			"Error": "Identifiants invalides",
+			"Error":           "Identifiants invalides",
+			"IsAuthenticated": false,
 		})
 		return
 	}
 
 	if !utils.CheckPassword(password, passwordHash) {
 		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
-			"Error": "Identifiants invalides",
+			"Error":           "Identifiants invalides",
+			"IsAuthenticated": false,
 		})
 		return
 	}
@@ -509,7 +512,10 @@ func loginHandler(c *gin.Context) {
 		userID, sessionToken, expiresAt,
 	)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+			"Error":           "Identifiants invalides",
+			"IsAuthenticated": false,
+		})
 		return
 	}
 
@@ -631,7 +637,7 @@ func getOtherUserProfile(c *gin.Context) {
 	isFollowing := followCount > 0
 
 	c.HTML(http.StatusOK, "user-profile.html", gin.H{
-		"User":       u,
+		"User":        u,
 		"IsFollowing": isFollowing,
 	})
 }
@@ -674,7 +680,7 @@ func main() {
 	})
 
 	r.GET("/", func(c *gin.Context) {
-		isLoggedIn := false
+		isAuthenticated := false
 
 		token, err := c.Cookie("session_token")
 		if err == nil {
@@ -687,19 +693,38 @@ func main() {
 			).Scan(&userID, &expiresAt)
 
 			if err == nil && time.Now().Before(expiresAt) {
-				isLoggedIn = true
+				isAuthenticated = true
 			}
 		}
 
 		c.HTML(http.StatusOK, "home.html", gin.H{
-			"IsLoggedIn": isLoggedIn,
+			"IsAuthenticated": isAuthenticated,
 		})
 	})
 
 	r.GET("/logout", logoutHandler)
 
 	r.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", gin.H{})
+		isAuthenticated := false
+
+		token, err := c.Cookie("session_token")
+		if err == nil {
+			var userID int
+			var expiresAt time.Time
+
+			err = db.QueryRow(
+				`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`,
+				token,
+			).Scan(&userID, &expiresAt)
+
+			if err == nil && time.Now().Before(expiresAt) {
+				isAuthenticated = true
+			}
+		}
+
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"IsAuthenticated": isAuthenticated,
+		})
 	})
 	r.POST("/login", loginHandler)
 	r.POST("/register", registerHandler)
@@ -754,75 +779,75 @@ func main() {
 	})
 
 	r.POST("/edit-profile", authMiddleware(), func(c *gin.Context) {
-        userID := currentUserID(c)
+		userID := currentUserID(c)
 
-        username := strings.TrimSpace(c.PostForm("username"))
-        email := strings.TrimSpace(c.PostForm("email"))
-        biography := strings.TrimSpace(c.PostForm("bio"))
+		username := strings.TrimSpace(c.PostForm("username"))
+		email := strings.TrimSpace(c.PostForm("email"))
+		biography := strings.TrimSpace(c.PostForm("bio"))
 
-        var avatarPath string
-        err := db.QueryRow(`
+		var avatarPath string
+		err := db.QueryRow(`
             SELECT photo_path
             FROM user_photos
             WHERE user_id = ?
             ORDER BY position ASC, id ASC
             LIMIT 1
         `, userID).Scan(&avatarPath)
-        if err != nil || avatarPath == "" {
-            avatarPath = "/static/images/default-avatar.png"
-        }
+		if err != nil || avatarPath == "" {
+			avatarPath = "/static/images/default-avatar.png"
+		}
 
-        if username == "" || email == "" {
-            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
-                "Username":     username,
-                "Email":        email,
-                "Biography":    biography,
-                "AvatarPath":   avatarPath,
-                "ErrorMessage": "Le pseudo et l'email sont obligatoires.",
-            })
-            return
-        }
+		if username == "" || email == "" {
+			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+				"Username":     username,
+				"Email":        email,
+				"Biography":    biography,
+				"AvatarPath":   avatarPath,
+				"ErrorMessage": "Le pseudo et l'email sont obligatoires.",
+			})
+			return
+		}
 
-        if len([]rune(biography)) > 201 { // Pour que ça marche avec 200 caractères tout pile.
-            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
-                "Username":     username,
-                "Email":        email,
-                "Biography":    biography,
-                "AvatarPath":   avatarPath,
-                "ErrorMessage": "La biographie ne doit pas dépasser 200 caractères.",
-            })
-            return
-        }
+		if len([]rune(biography)) > 201 { // Pour que ça marche avec 200 caractères tout pile.
+			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+				"Username":     username,
+				"Email":        email,
+				"Biography":    biography,
+				"AvatarPath":   avatarPath,
+				"ErrorMessage": "La biographie ne doit pas dépasser 200 caractères.",
+			})
+			return
+		}
 
-        _, err = db.Exec(`
+		_, err = db.Exec(`
             UPDATE users
             SET username = ?, email = ?, biography = ?
             WHERE id = ?
         `, username, email, biography, userID)
-        if err != nil {
-            c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
-                "Username":     username,
-                "Email":        email,
-                "Biography":    biography,
-                "AvatarPath":   avatarPath,
-                "ErrorMessage": "Impossible de mettre à jour le profil. Email ou pseudo peut-être déjà utilisé.",
-            })
-            return
-        }
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
+				"Username":     username,
+				"Email":        email,
+				"Biography":    biography,
+				"AvatarPath":   avatarPath,
+				"ErrorMessage": "Impossible de mettre à jour le profil. Email ou pseudo peut-être déjà utilisé.",
+			})
+			return
+		}
 
-        file, err := c.FormFile("avatar")
-        if err == nil && file != nil {
-            uploadDir := "frontend/web/uploads/profile"
-            os.MkdirAll(uploadDir, 0755)
+		file, err := c.FormFile("avatar")
+		if err == nil && file != nil {
+			uploadDir := "frontend/web/uploads/profile"
+			os.MkdirAll(uploadDir, 0755)
 
-            filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), filepath.Base(file.Filename))
-            dst := filepath.Join(uploadDir, filename)
+			filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), filepath.Base(file.Filename))
+			dst := filepath.Join(uploadDir, filename)
 
-            if err := c.SaveUploadedFile(file, dst); err == nil {
-                photoPath := "/uploads/profile/" + filename
+			if err := c.SaveUploadedFile(file, dst); err == nil {
+				photoPath := "/uploads/profile/" + filename
 
-                var existingPhotoID int
-                err = db.QueryRow(`
+				var existingPhotoID int
+				err = db.QueryRow(`
                     SELECT id
                     FROM user_photos
                     WHERE user_id = ?
@@ -830,23 +855,23 @@ func main() {
                     LIMIT 1
                 `, userID).Scan(&existingPhotoID)
 
-                if err == nil {
-                    db.Exec(`
+				if err == nil {
+					db.Exec(`
                         UPDATE user_photos
                         SET photo_path = ?
                         WHERE id = ?
                     `, photoPath, existingPhotoID)
-                } else {
-                    db.Exec(`
+				} else {
+					db.Exec(`
                         INSERT INTO user_photos (user_id, photo_path, position)
                         VALUES (?, ?, 0)
                     `, userID, photoPath)
-                }
-            }
-        }
+				}
+			}
+		}
 
-        c.Redirect(http.StatusFound, "/profile")
-    })
+		c.Redirect(http.StatusFound, "/profile")
+	})
 
 	r.GET("/profile", authMiddleware(), func(c *gin.Context) {
 		userID := currentUserID(c)

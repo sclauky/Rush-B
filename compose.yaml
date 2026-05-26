@@ -1,5 +1,25 @@
 services:
-  web:
+  app:
     build: .
+    container_name: rushb_app
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2
+    container_name: rushb_caddy
+    restart: unless-stopped
+    depends_on:
+      - app
     ports:
-      - "8080:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
