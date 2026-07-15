@@ -222,7 +222,7 @@ function attachEvents() {
   if (likeBtn) {
     likeBtn.addEventListener("click", () => {
       if (!currentCard) return;
-      handleDecision("like");
+      handleDecision("smash");
     });
   }
 

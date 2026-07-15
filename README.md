@@ -18,6 +18,8 @@ docker compose version
 
 ## Comment lancer le projet
 
+Démarrez Docker Desktop.
+
 Placez-vous à la racine du projet, puis lancez :
 
 ```bash
