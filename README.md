@@ -1,6 +1,6 @@
 # README
 
-## Ce qu'il faut avoir
+## Prérequis
 
 Avant de lancer le projet, il faut au minimum :
 
@@ -18,7 +18,7 @@ docker compose version
 
 ## Comment lancer le projet
 
-Place-toi à la racine du projet, puis lance :
+Placez-vous à la racine du projet, puis lancez :
 
 ```bash
 git checkout integration/rebuild-clean
@@ -26,9 +26,7 @@ docker compose down
 docker compose up --build -d
 ```
 
-`docker compose up --build -d` permet de reconstruire puis démarrer les services en arrière-plan.
-
-Ensuite, vérifie que tout tourne :
+Ensuite, vérifiez que tout tourne :
 
 ```bash
 docker compose ps
@@ -38,25 +36,19 @@ docker compose ps
 
 ### En HTTPS
 
-Ouvre cette URL dans ton navigateur :
+Ouvre cette URL dans votre navigateur :
 
 ```text
 https://rushb.localhost
 ```
 
-Caddy peut servir automatiquement du HTTPS local pour `localhost` et les domaines en `.localhost`, selon sa configuration.
-
 ### En HTTP
-
-Si tu veux le lancer en HTTP, ouvre :
 
 ```text
 http://rushb.localhost
 ```
 
 ## Si ça ne marche pas
-
-Regarde les logs des services :
 
 ```bash
 docker compose logs app --tail=100
@@ -66,8 +58,6 @@ docker compose logs caddy --tail=100
 La commande `docker compose logs` permet d'afficher les logs d'un service, et `--tail` limite le nombre de lignes affichées.
 
 ## Arborescence du projet
-
-Colle l'arborescence ici :
 
 ```text
 C:.
