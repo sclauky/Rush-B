@@ -56,6 +56,26 @@
     z-index: -1;
   }
 
+  .home-page .site-bg {
+    display: none;
+  }
+
+  .home-prism-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .home-prism-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
   .page-loading-overlay {
     position: fixed;
     inset: 0;
