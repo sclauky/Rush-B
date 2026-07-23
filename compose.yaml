@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     expose:
       - "8080"
+    volumes:
+      - ./backend/database:/app/backend/database
 
   caddy:
     image: caddy:2
