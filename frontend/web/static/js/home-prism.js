@@ -1,5 +1,3 @@
-import { Renderer, Triangle, Program, Mesh } from 'https://cdn.jsdelivr.net/npm/ogl@0.0.36/dist/ogl.module.js';
-
 const createPrismBackground = ({
   container,
   height = 3.9,
@@ -9,7 +7,7 @@ const createPrismBackground = ({
   offset = { x: 0, y: 0 },
   noise = 0,
   transparent = true,
-  scale = 3.2,
+  scale = 5,
   hueShift = 0,
   colorFrequency = 1.55,
   hoverStrength = 2,
@@ -33,6 +31,21 @@ const createPrismBackground = ({
   const TS = Math.max(0, timeScale || 1);
   const HOVSTR = Math.max(0, hoverStrength || 1);
   const INERT = Math.max(0, Math.min(1, inertia || 0.12));
+
+  const ogl = window.ogl || {};
+  const { Renderer, Plane, Program, Mesh } = ogl;
+  console.debug('home-prism init', {
+    oglLoaded: !!window.ogl,
+    hasRenderer: !!Renderer,
+    hasPlane: !!Plane,
+    hasProgram: !!Program,
+    hasMesh: !!Mesh
+  });
+
+  if (!Renderer || !Plane || !Program || !Mesh) {
+    console.error('Local OGL bundle is not available yet on window.ogl.', ogl);
+    return;
+  }
 
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const renderer = new Renderer({ dpr, alpha: transparent, antialias: false });
@@ -165,7 +178,7 @@ const createPrismBackground = ({
     }
   `;
 
-  const geometry = new Triangle(gl);
+  const geometry = new Plane(gl, { width: 2, height: 2 });
   const iResBuf = new Float32Array(2);
   const offsetPxBuf = new Float32Array(2);
 
@@ -277,7 +290,22 @@ const createPrismBackground = ({
 const init = () => {
   const container = document.getElementById('home-prism-background');
   if (!container) return;
-  createPrismBackground({ container });
+
+  const tryInit = () => {
+    if (window.ogl && window.ogl.Renderer && window.ogl.Plane && window.ogl.Program && window.ogl.Mesh) {
+      createPrismBackground({ container });
+    } else {
+      setTimeout(() => {
+        if (window.ogl && window.ogl.Renderer && window.ogl.Plane && window.ogl.Program && window.ogl.Mesh) {
+          createPrismBackground({ container });
+        } else {
+          console.error('OGL bundle was not ready when init ran.');
+        }
+      }, 50);
+    }
+  };
+
+  tryInit();
 };
 
-init();
+document.addEventListener('DOMContentLoaded', init);

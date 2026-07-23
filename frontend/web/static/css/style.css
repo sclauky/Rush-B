@@ -25,12 +25,21 @@
     scroll-behavior: smooth;
   }
   
+  html.home-page,
+  body.home-page {
+    background: transparent;
+  }
+
   body {
     font-family: "Inter", sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  .home-page {
+    background: transparent;
   }
   
   a {
@@ -66,14 +75,17 @@
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
+    background: transparent;
   }
 
-  .home-prism-background {
+  .home-prism-background,
+  .home-prism-wrapper canvas {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    display: block;
+    background: transparent;
   }
 
   .page-loading-overlay {
