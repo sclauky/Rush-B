@@ -10,10 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
-	"strings"
-	"time"
-
 	"socialauth/backend/forum/auth/utils"
 	commentDB "socialauth/backend/forum/comment/db"
 	commentH "socialauth/backend/forum/comment/handlers"
@@ -22,7 +18,9 @@ import (
 	postDB "socialauth/backend/forum/post/db"
 	postHandlers "socialauth/backend/forum/post/handlers"
 	searchHandlers "socialauth/backend/forum/search"
-	swipeHandlers "socialauth/backend/forum/swipe"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,6 +29,36 @@ import (
 
 var db *sql.DB
 
+type User struct {
+	ID          int      `json:"id"`
+	FirstName   string   `json:"first_name"`
+	LastName    string   `json:"last_name"`
+	Username    string   `json:"username"`
+	Biography   string   `json:"biography"`
+	GameTypes   []string `json:"game_types"`
+	GamesPlayed []string `json:"games_played"`
+	SkillLevel  string   `json:"skill_level"`
+	PlayStyle   string   `json:"play_style"`
+	Photos      []string `json:"photos"`
+	SteamID     string
+}
+
+type SwipeRequest struct {
+	TargetID  int    `json:"target_id"`
+	Direction string `json:"direction"`
+}
+
+type MatchResponse struct {
+	Matched bool `json:"matched"`
+	MatchID int  `json:"match_id,omitempty"`
+}
+
+type MatchEntry struct {
+	User      User      `json:"user"`
+	MatchID   int       `json:"match_id"`
+	MatchedAt time.Time `json:"matched_at"`
+}
+
 type ProfilePost struct {
 	ID        int
 	Title     string
@@ -38,20 +66,6 @@ type ProfilePost struct {
 	ImagePath string
 	CreatedAt string
 	Likes     int
-}
-
-type User struct {
-	ID          int
-	FirstName   string
-	LastName    string
-	Username    string
-	Biography   string
-	SteamID     string
-	SkillLevel  string
-	PlayStyle   string
-	GameTypes   []string
-	GamesPlayed []string
-	Photos      []string
 }
 
 func authMiddleware() gin.HandlerFunc {
@@ -100,10 +114,12 @@ func currentUserID(c *gin.Context) int {
 	if !exists {
 		return 0
 	}
+
 	userID, ok := v.(int)
 	if !ok {
 		return 0
 	}
+
 	return userID
 }
 
@@ -138,17 +154,11 @@ func extractSteamID(claimedID string) (string, error) {
 }
 
 func steamLinkHandler(c *gin.Context) {
-	v, exists := c.Get("userID")
-	if !exists {
+	userID := currentUserID(c)
+	if userID == 0 {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
 		return
 	}
-	userID, ok := v.(int)
-	if !ok || userID == 0 {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-		return
-	}
-	_ = userID
 
 	baseURL := os.Getenv("BASE_URL")
 	if baseURL == "" {
@@ -171,13 +181,8 @@ func steamLinkHandler(c *gin.Context) {
 }
 
 func steamCallbackHandler(c *gin.Context) {
-	v, exists := c.Get("userID")
-	if !exists {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-		return
-	}
-	userID, ok := v.(int)
-	if !ok || userID == 0 {
+	userID := currentUserID(c)
+	if userID == 0 {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
 		return
 	}
@@ -217,6 +222,211 @@ func steamCallbackHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/profile")
 }
 
+func getProfiles(c *gin.Context) {
+	userID := currentUserID(c)
+
+	rows, err := db.Query(`
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
+		FROM users u
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE u.id != ?
+		  AND u.id NOT IN (SELECT target_id FROM swipes WHERE swiper_id = ?)
+		ORDER BY RANDOM()
+		LIMIT 20
+	`, userID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+	defer rows.Close()
+
+	profiles := []User{}
+	for rows.Next() {
+		var u User
+		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography, &u.SkillLevel, &u.PlayStyle)
+		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+		u.GamesPlayed = queryStrings(db, `SELECT game_name FROM user_games WHERE user_id = ?`, u.ID)
+		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 6`, u.ID)
+		profiles = append(profiles, u)
+	}
+	c.JSON(http.StatusOK, profiles)
+}
+
+func handleSwipe(c *gin.Context) {
+	userID := currentUserID(c)
+
+	var req SwipeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+
+	_, err := db.Exec(
+		`INSERT OR IGNORE INTO swipes (swiper_id, target_id, direction, created_at) VALUES (?, ?, ?, ?)`,
+		userID, req.TargetID, req.Direction, time.Now(),
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+
+	resp := MatchResponse{}
+	if req.Direction == "like" {
+		var reverseID int
+		err := db.QueryRow(
+			`SELECT id FROM swipes WHERE swiper_id = ? AND target_id = ? AND direction = 'like'`,
+			req.TargetID, userID,
+		).Scan(&reverseID)
+		if err == nil {
+			var matchID int
+			err2 := db.QueryRow(
+				`SELECT id FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`,
+				userID, req.TargetID, req.TargetID, userID,
+			).Scan(&matchID)
+			if err2 == sql.ErrNoRows {
+				res, _ := db.Exec(
+					`INSERT INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)`,
+					userID, req.TargetID, time.Now(),
+				)
+				id64, _ := res.LastInsertId()
+				matchID = int(id64)
+			}
+			resp.Matched = true
+			resp.MatchID = matchID
+		}
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func getMatches(c *gin.Context) {
+	userID := currentUserID(c)
+
+	rows, err := db.Query(`
+		SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
+		       COALESCE(up.skill_level, ''), COALESCE(up.play_style, ''), m.id, m.created_at
+		FROM matches m
+		JOIN users u ON (u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END)
+		LEFT JOIN user_preferences up ON up.user_id = u.id
+		WHERE m.user1_id = ? OR m.user2_id = ?
+		ORDER BY m.created_at DESC
+	`, userID, userID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
+	}
+	defer rows.Close()
+
+	matches := []MatchEntry{}
+	for rows.Next() {
+		var u User
+		var me MatchEntry
+		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography,
+			&u.SkillLevel, &u.PlayStyle, &me.MatchID, &me.MatchedAt)
+		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 1`, u.ID)
+		me.User = u
+		matches = append(matches, me)
+	}
+	c.JSON(http.StatusOK, matches)
+}
+
+func deleteMatch(c *gin.Context) {
+	userID := currentUserID(c)
+	matchID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var u1, u2 int
+	err = db.QueryRow(`SELECT user1_id, user2_id FROM matches WHERE id = ?`, matchID).Scan(&u1, &u2)
+	if err != nil || (u1 != userID && u2 != userID) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	db.Exec(`DELETE FROM matches WHERE id = ?`, matchID)
+	c.JSON(http.StatusOK, gin.H{"ok": "unmatched"})
+}
+
+func uploadPhoto(c *gin.Context) {
+	userID := currentUserID(c)
+
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM user_photos WHERE user_id = ?`, userID).Scan(&count)
+	if count >= 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "max 6 photos"})
+		return
+	}
+
+	file, header, err := c.Request.FormFile("photo")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no file"})
+		return
+	}
+	defer file.Close()
+
+	uploadDir := "frontend/web/uploads/swipe"
+	os.MkdirAll(uploadDir, 0755)
+
+	filename := fmt.Sprintf("%d_%d_%s", userID, time.Now().Unix(), header.Filename)
+	dst, err := os.Create(filepath.Join(uploadDir, filename))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
+		return
+	}
+	defer dst.Close()
+
+	buf := make([]byte, 10<<20)
+	n, _ := file.Read(buf)
+	dst.Write(buf[:n])
+
+	photoPath := "/uploads/swipe/" + filename
+	db.Exec(`INSERT INTO user_photos (user_id, photo_path, position) VALUES (?, ?, ?)`,
+		userID, photoPath, count)
+
+	c.JSON(http.StatusOK, gin.H{"path": photoPath})
+}
+
+func deletePhoto(c *gin.Context) {
+	userID := currentUserID(c)
+	photoID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	db.Exec(`DELETE FROM user_photos WHERE id = ? AND user_id = ?`, photoID, userID)
+	c.JSON(http.StatusOK, gin.H{"ok": "deleted"})
+}
+
+func queryStrings(db *sql.DB, query string, args ...interface{}) []string {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return []string{}
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var s string
+		rows.Scan(&s)
+		out = append(out, s)
+	}
+	if out == nil {
+		return []string{}
+	}
+	return out
+}
+
+func runMigrationsFromFile(db *sql.DB, filename string) error {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(string(content))
+	return err
+}
+
 func registerHandler(c *gin.Context) {
 	username := strings.TrimSpace(c.PostForm("username"))
 	firstName := strings.TrimSpace(c.PostForm("first_name"))
@@ -226,17 +436,23 @@ func registerHandler(c *gin.Context) {
 	confirmPassword := c.PostForm("confirm_password")
 
 	if username == "" || firstName == "" || lastName == "" || email == "" || password == "" || confirmPassword == "" {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"RegisterError": "Tous les champs sont obligatoires"})
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"RegisterError": "Tous les champs sont obligatoires",
+		})
 		return
 	}
 
 	if password != confirmPassword {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"ConfirmPasswordError": "Les mots de passe ne correspondent pas"})
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"ConfirmPasswordError": "Les mots de passe ne correspondent pas",
+		})
 		return
 	}
 
 	if !utils.IsValidPassword(password) {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"PasswordError": "Le mot de passe doit contenir au moins 7 caractères, une majuscule, une minuscule et un chiffre."})
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"PasswordError": "Le mot de passe doit contenir au moins 7 caractères, une majuscule, une minuscule et un chiffre.",
+		})
 		return
 	}
 
@@ -247,11 +463,13 @@ func registerHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO users (first_name, last_name, email, username, password_hash)
-        VALUES (?, ?, ?, ?, ?)
-    `, firstName, lastName, email, username, hashedPassword)
+		INSERT INTO users (first_name, last_name, email, username, password_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, firstName, lastName, email, username, hashedPassword)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "home.html", gin.H{"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé."})
+		c.HTML(http.StatusBadRequest, "home.html", gin.H{
+			"RegisterError": "Impossible de créer le compte. Email ou pseudo peut-être déjà utilisé.",
+		})
 		return
 	}
 
@@ -320,16 +538,7 @@ func logoutHandler(c *gin.Context) {
 }
 
 func followUserHandler(c *gin.Context) {
-	v, exists := c.Get("userID")
-	if !exists {
-		c.HTML(http.StatusUnauthorized, "404.html", gin.H{})
-		return
-	}
-	currentID, ok := v.(int)
-	if !ok || currentID == 0 {
-		c.HTML(http.StatusUnauthorized, "404.html", gin.H{})
-		return
-	}
+	currentID := currentUserID(c)
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -343,9 +552,9 @@ func followUserHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
-        VALUES (?, ?, ?)
-    `, currentID, targetID, time.Now())
+		INSERT OR IGNORE INTO follows (follower_id, followed_id, created_at)
+		VALUES (?, ?, ?)
+	`, currentID, targetID, time.Now())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
@@ -355,16 +564,7 @@ func followUserHandler(c *gin.Context) {
 }
 
 func unfollowUserHandler(c *gin.Context) {
-	v, exists := c.Get("userID")
-	if !exists {
-		c.HTML(http.StatusUnauthorized, "404.html", gin.H{})
-		return
-	}
-	currentID, ok := v.(int)
-	if !ok || currentID == 0 {
-		c.HTML(http.StatusUnauthorized, "404.html", gin.H{})
-		return
-	}
+	currentID := currentUserID(c)
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -373,9 +573,9 @@ func unfollowUserHandler(c *gin.Context) {
 	}
 
 	_, err = db.Exec(`
-        DELETE FROM follows
-        WHERE follower_id = ? AND followed_id = ?
-    `, currentID, targetID)
+		DELETE FROM follows
+		WHERE follower_id = ? AND followed_id = ?
+	`, currentID, targetID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
@@ -385,16 +585,7 @@ func unfollowUserHandler(c *gin.Context) {
 }
 
 func getOtherUserProfile(c *gin.Context) {
-	v, exists := c.Get("userID")
-	if !exists {
-		c.Redirect(http.StatusFound, "/login")
-		return
-	}
-	currentID, ok := v.(int)
-	if !ok || currentID == 0 {
-		c.Redirect(http.StatusFound, "/login")
-		return
-	}
+	currentID := currentUserID(c)
 
 	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -409,7 +600,7 @@ func getOtherUserProfile(c *gin.Context) {
 
 	var u User
 	err = db.QueryRow(`
-        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''), COALESCE(u.steam_id, ''),
+        SELECT u.id, u.first_name, u.last_name, u.username, COALESCE(u.biography, ''),
                COALESCE(up.skill_level, ''), COALESCE(up.play_style, '')
         FROM users u
         LEFT JOIN user_preferences up ON up.user_id = u.id
@@ -420,7 +611,6 @@ func getOtherUserProfile(c *gin.Context) {
 		&u.LastName,
 		&u.Username,
 		&u.Biography,
-		&u.SteamID,
 		&u.SkillLevel,
 		&u.PlayStyle,
 	)
@@ -433,9 +623,9 @@ func getOtherUserProfile(c *gin.Context) {
 		return
 	}
 
-	u.GameTypes = []string{}
-	u.GamesPlayed = []string{}
-	u.Photos = []string{}
+	u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
+	u.GamesPlayed = queryStrings(db, `SELECT game_name FROM user_games WHERE user_id = ?`, u.ID)
+	u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 6`, u.ID)
 
 	var followCount int
 	err = db.QueryRow(`
@@ -454,15 +644,6 @@ func getOtherUserProfile(c *gin.Context) {
 		"User":        u,
 		"IsFollowing": isFollowing,
 	})
-}
-
-func runMigrationsFromFile(db *sql.DB, filename string) error {
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec(string(content))
-	return err
 }
 
 func main() {
@@ -487,7 +668,6 @@ func main() {
 	}
 
 	searchService := &searchHandlers.Service{DB: db}
-	swipeService := swipeHandlers.NewService(db)
 
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -499,7 +679,7 @@ func main() {
 	r.Static("/static", "frontend/web/static")
 	r.Static("/uploads", "frontend/web/uploads")
 
-	r.GET("/swipe", authMiddleware(), func(c *gin.Context) {
+	r.GET("/swipe", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
 
@@ -560,7 +740,9 @@ func main() {
 			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
 			return
 		}
-		c.HTML(http.StatusOK, "posts.html", gin.H{"Posts": posts})
+		c.HTML(http.StatusOK, "posts.html", gin.H{
+			"Posts": posts,
+		})
 	})
 
 	r.GET("/posts/:id", authMiddleware(), func(c *gin.Context) {
@@ -629,12 +811,12 @@ func main() {
 
 		var avatarPath string
 		err := db.QueryRow(`
-		SELECT photo_path
-		FROM user_photos
-		WHERE user_id = ?
-		ORDER BY position ASC, id ASC
-		LIMIT 1
-	`, userID).Scan(&avatarPath)
+            SELECT photo_path
+            FROM user_photos
+            WHERE user_id = ?
+            ORDER BY position ASC, id ASC
+            LIMIT 1
+        `, userID).Scan(&avatarPath)
 		if err != nil || avatarPath == "" {
 			avatarPath = "/static/images/default-avatar.png"
 		}
@@ -662,10 +844,10 @@ func main() {
 		}
 
 		_, err = db.Exec(`
-		UPDATE users
-		SET username = ?, email = ?, biography = ?
-		WHERE id = ?
-	`, username, email, biography, userID)
+            UPDATE users
+            SET username = ?, email = ?, biography = ?
+            WHERE id = ?
+        `, username, email, biography, userID)
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "edit-profile.html", gin.H{
 				"Username":     username,
@@ -690,24 +872,24 @@ func main() {
 
 				var existingPhotoID int
 				err = db.QueryRow(`
-				SELECT id
-				FROM user_photos
-				WHERE user_id = ?
-				ORDER BY position ASC, id ASC
-				LIMIT 1
-			`, userID).Scan(&existingPhotoID)
+                    SELECT id
+                    FROM user_photos
+                    WHERE user_id = ?
+                    ORDER BY position ASC, id ASC
+                    LIMIT 1
+                `, userID).Scan(&existingPhotoID)
 
 				if err == nil {
 					db.Exec(`
-					UPDATE user_photos
-					SET photo_path = ?
-					WHERE id = ?
-				`, photoPath, existingPhotoID)
+                        UPDATE user_photos
+                        SET photo_path = ?
+                        WHERE id = ?
+                    `, photoPath, existingPhotoID)
 				} else {
 					db.Exec(`
-					INSERT INTO user_photos (user_id, photo_path, position)
-					VALUES (?, ?, 0)
-				`, userID, photoPath)
+                        INSERT INTO user_photos (user_id, photo_path, position)
+                        VALUES (?, ?, 0)
+                    `, userID, photoPath)
 				}
 			}
 		}
@@ -821,6 +1003,11 @@ func main() {
 	})
 
 	r.GET("/users/:id", authMiddleware(), getOtherUserProfile)
+
+	r.NoRoute(func(c *gin.Context) {
+		c.HTML(http.StatusNotFound, "404.html", gin.H{})
+	})
+
 	r.POST("/users/:id/follow", authMiddleware(), followUserHandler)
 	r.POST("/users/:id/unfollow", authMiddleware(), unfollowUserHandler)
 
@@ -830,18 +1017,29 @@ func main() {
 	cdb := &commentDB.CommentDB{DB: db}
 	ch := &commentH.CommentHandler{DB: cdb}
 
-	r.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusNotFound, "404.html", gin.H{})
-	})
-
 	steamGroup := r.Group("/", authMiddleware())
 	{
 		steamGroup.GET("/account/steam/link", steamLinkHandler)
 		steamGroup.GET("/auth/steam/callback", steamCallbackHandler)
 	}
 
-	swipeAPI := r.Group("/api/swipe", authMiddleware())
-	swipeService.RegisterRoutes(swipeAPI)
+	api := r.Group("/api/swipe", authMiddleware())
+	{
+		api.GET("/profiles", getProfiles)
+		api.POST("/action", handleSwipe)
+		api.GET("/matches", getMatches)
+		api.DELETE("/matches/:id", deleteMatch)
+		api.POST("/photos", uploadPhoto)
+		api.DELETE("/photos/:id", deletePhoto)
+	}
+
+	usersAPI := r.Group("/api/users", authMiddleware())
+	{
+		usersAPI.GET("/search", func(c *gin.Context) {
+			currentID := currentUserID(c)
+			searchService.SearchUsersAPI(c, currentID)
+		})
+	}
 
 	postsAPI := r.Group("/api/posts", authMiddleware())
 	{
@@ -849,7 +1047,6 @@ func main() {
 			c.Set("reaction", "like")
 			lh.ReactToPost(c)
 		})
-
 		postsAPI.POST("/:id/dislike", func(c *gin.Context) {
 			c.Set("reaction", "dislike")
 			lh.ReactToPost(c)
@@ -864,58 +1061,9 @@ func main() {
 			c.Set("reaction", "like")
 			lh.ReactToComment(c)
 		})
-
 		postsAPI.POST("/:id/comments/:comment_id/dislike", func(c *gin.Context) {
 			c.Set("reaction", "dislike")
 			lh.ReactToComment(c)
-		})
-	}
-
-	usersAPI := r.Group("/api/users", authMiddleware())
-	{
-		usersAPI.GET("/search", func(c *gin.Context) {
-			currentID := currentUserID(c)
-			query := strings.TrimSpace(c.Query("q"))
-
-			if query == "" {
-				c.JSON(http.StatusOK, gin.H{"users": []any{}})
-				return
-			}
-
-			rows, err := db.Query(`
-                SELECT u.id,
-                       u.username,
-                       COALESCE(u.biography, '') AS biography,
-                       COALESCE(p.photo_path, '') AS avatar_path
-                FROM users u
-                LEFT JOIN user_photos p ON p.user_id = u.id
-                WHERE u.username LIKE ? || '%'
-                  AND u.id != ?
-                ORDER BY u.username ASC
-                LIMIT 10
-            `, query, currentID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
-				return
-			}
-			defer rows.Close()
-
-			type SearchUser struct {
-				ID         int    `json:"id"`
-				Username   string `json:"username"`
-				Biography  string `json:"biography"`
-				AvatarPath string `json:"avatar_path"`
-			}
-
-			var users []SearchUser
-			for rows.Next() {
-				var u SearchUser
-				if err := rows.Scan(&u.ID, &u.Username, &u.Biography, &u.AvatarPath); err == nil {
-					users = append(users, u)
-				}
-			}
-
-			c.JSON(http.StatusOK, gin.H{"users": users})
 		})
 	}
 

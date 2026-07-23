@@ -236,7 +236,6 @@ func (s *Service) deletePhoto(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"ok": "deleted"})
 }
 
-// ICI, à la fin du fichier:
 
 func currentUserID(c *gin.Context) int {
     v, exists := c.Get("userID")

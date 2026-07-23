@@ -5,7 +5,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".reaction-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
-      // Empêche le clic de naviguer vers la page du post
       e.preventDefault();
       e.stopPropagation();
 

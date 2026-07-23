@@ -194,9 +194,8 @@ function setTopCard() {
     currentCard = null;
     return;
   }
-
-  // top visuel = dernière carte dans le DOM
-  currentCard = cards[cards.length - 1];
+  
+  currentCard = cards[0];
   currentCard.classList.add("is-top");
 
   resetCardTransform(currentCard);
@@ -223,7 +222,7 @@ function attachEvents() {
   if (likeBtn) {
     likeBtn.addEventListener("click", () => {
       if (!currentCard) return;
-      handleDecision("like");
+      handleDecision("smash");
     });
   }
 
@@ -233,8 +232,7 @@ function attachEvents() {
     });
   }
 
-  const stack = qs("#card-stack");
-  stack.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointerdown", onPointerDown);
   window.addEventListener("pointermove", onPointerMove);
   window.addEventListener("pointerup", onPointerUp);
 }
@@ -242,6 +240,10 @@ function attachEvents() {
 function onPointerDown(e) {
   if (!currentCard) return;
   if (e.button !== 0 && e.pointerType === "mouse") return;
+
+  if (!e.target.closest(".swipe-card.is-top")) {
+    return;
+  }
 
   isDragging = true;
   dragStartX = e.clientX;
