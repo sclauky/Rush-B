@@ -23,7 +23,6 @@ Démarrez Docker Desktop.
 Placez-vous à la racine du projet, puis lancez :
 
 ```bash
-git checkout integration/rebuild-clean
 docker compose down
 docker compose up --build -d
 ```

@@ -71,4 +71,26 @@ document.addEventListener("DOMContentLoaded", () => {
   if (params.get("modal") === "register") {
     openRegisterModal();
   }
+
+  function setupPasswordToggles() {
+    document.querySelectorAll(".password-toggle").forEach((checkbox) => {
+      const targets = checkbox
+        .getAttribute("data-targets")
+        .split(",")
+        .map((selector) => selector.trim())
+        .filter(Boolean);
+
+      checkbox.addEventListener("change", () => {
+        const type = checkbox.checked ? "text" : "password";
+        targets.forEach((selector) => {
+          const input = document.querySelector(selector);
+          if (input) {
+            input.type = type;
+          }
+        });
+      });
+    });
+  }
+
+  setupPasswordToggles();
 });

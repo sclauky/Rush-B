@@ -36,10 +36,12 @@
         <div class="nav-links">
           <a href="/">Accueil</a>
           <a href="/posts">Posts</a>
+          {{if .IsAuthenticated}}
+          <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
+          {{end}}
           <a href="/swipe">Finder</a>
 
           {{if .IsAuthenticated}}
-          <a href="/create-post" class="nav-plus" aria-label="Créer un post"><span>+</span></a>
           <a href="/profile">Profil</a>
           {{end}}
         </div>
@@ -219,6 +221,16 @@
             <p class="form-error">{{.ConfirmPasswordError}}</p>
             {{end}}
           </div>
+
+          <label class="checkbox-row password-toggle-row">
+            <input
+              type="checkbox"
+              class="password-toggle"
+              data-targets="#register-password,#register-confirm-password"
+              id="toggle-password-register"
+            />
+            <span>Afficher les mots de passe</span>
+          </label>
 
           <label class="checkbox-row terms-row">
             <input type="checkbox" required />

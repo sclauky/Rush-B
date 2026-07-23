@@ -157,6 +157,11 @@
     align-items: center;
     gap: 1rem;
   }
+
+  .nav-links {
+    justify-content: center;
+    flex: 1;
+  }
   
   .nav-links a {
     color: var(--muted);
@@ -315,6 +320,7 @@
   overflow: visible;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   color: #ffffff;
+  margin: 0 auto;
 }
 
 .nav-links .nav-plus span {

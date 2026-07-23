@@ -512,7 +512,7 @@ func loginHandler(c *gin.Context) {
 
 	err := db.QueryRow(`SELECT id, password_hash FROM users WHERE email = ?`, email).Scan(&userID, &passwordHash)
 	if err != nil {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+		c.HTML(http.StatusOK, "login.html", gin.H{
 			"Error":           "Identifiants invalides",
 			"IsAuthenticated": false,
 		})
@@ -520,7 +520,7 @@ func loginHandler(c *gin.Context) {
 	}
 
 	if !utils.CheckPassword(password, passwordHash) {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+		c.HTML(http.StatusOK, "login.html", gin.H{
 			"Error":           "Identifiants invalides",
 			"IsAuthenticated": false,
 		})
@@ -535,8 +535,8 @@ func loginHandler(c *gin.Context) {
 		userID, sessionToken, expiresAt,
 	)
 	if err != nil {
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
-			"Error":           "Identifiants invalides",
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"Error":           "Impossible de démarrer la session, réessaye plus tard",
 			"IsAuthenticated": false,
 		})
 		return
