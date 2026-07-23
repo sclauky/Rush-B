@@ -244,11 +244,18 @@ func getProfiles(c *gin.Context) {
 	profiles := []User{}
 	for rows.Next() {
 		var u User
-		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography, &u.SkillLevel, &u.PlayStyle)
+		if err := rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography, &u.SkillLevel, &u.PlayStyle); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+			return
+		}
 		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
 		u.GamesPlayed = queryStrings(db, `SELECT game_name FROM user_games WHERE user_id = ?`, u.ID)
 		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 6`, u.ID)
 		profiles = append(profiles, u)
+	}
+	if err := rows.Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
 	}
 	c.JSON(http.StatusOK, profiles)
 }
@@ -321,12 +328,19 @@ func getMatches(c *gin.Context) {
 	for rows.Next() {
 		var u User
 		var me MatchEntry
-		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography,
-			&u.SkillLevel, &u.PlayStyle, &me.MatchID, &me.MatchedAt)
+		if err := rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Username, &u.Biography,
+			&u.SkillLevel, &u.PlayStyle, &me.MatchID, &me.MatchedAt); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+			return
+		}
 		u.GameTypes = queryStrings(db, `SELECT game_type FROM user_game_types WHERE user_id = ?`, u.ID)
 		u.Photos = queryStrings(db, `SELECT photo_path FROM user_photos WHERE user_id = ? ORDER BY position ASC LIMIT 1`, u.ID)
 		me.User = u
 		matches = append(matches, me)
+	}
+	if err := rows.Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return
 	}
 	c.JSON(http.StatusOK, matches)
 }
@@ -409,8 +423,13 @@ func queryStrings(db *sql.DB, query string, args ...interface{}) []string {
 	var out []string
 	for rows.Next() {
 		var s string
-		rows.Scan(&s)
+		if err := rows.Scan(&s); err != nil {
+			continue
+		}
 		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return []string{}
 	}
 	if out == nil {
 		return []string{}
@@ -969,6 +988,10 @@ func main() {
 			if err := rows.Scan(&p.ID, &p.Title, &p.Content, &p.ImagePath, &p.CreatedAt, &p.Likes); err == nil {
 				posts = append(posts, p)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			c.HTML(http.StatusInternalServerError, "500.html", gin.H{})
+			return
 		}
 
 		joinedDate := createdAt
