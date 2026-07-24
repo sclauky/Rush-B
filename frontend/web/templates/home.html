@@ -25,6 +25,15 @@
     </style>
   </head>
   <body class="home-page">
+    <div id="page-loading-overlay" class="page-loading-overlay welcome-overlay" aria-hidden="true">
+      <div class="page-loading-card page-loading-welcome">
+        <svg class="welcome-svg" viewBox="0 0 420 120" aria-hidden="true">
+          <text class="welcome-text" x="50%" y="54%" text-anchor="middle" dominant-baseline="middle">RUSH-B</text>
+        </svg>
+        <p class="page-loading-subtitle">Le forum où les squads se forment.</p>
+      </div>
+    </div>
+
     <div class="home-prism-wrapper">
       <div id="home-prism-background" class="home-prism-background"></div>
     </div>
@@ -367,8 +376,10 @@
       </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
     <script src="/static/js/vendor/ogl.umd.js?v=2"></script>
     <script src="/static/js/main.js"></script>
     <script src="/static/js/home-prism.js?v=2"></script>
+    <script src="/static/js/loadingscreen.js"></script>
   </body>
 </html>
