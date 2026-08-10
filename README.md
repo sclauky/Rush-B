@@ -8,7 +8,7 @@ Avant de lancer le projet, il faut au minimum :
 - **Docker Desktop** installé et démarré, avec `docker compose` disponible.
 - Un terminal ouvert à la racine du projet.
 
-Tu peux vérifier rapidement que tout est bien installé avec :
+Vous pouvez vérifier rapidement que tout est bien installé avec :
 
 ```bash
 git --version
@@ -18,19 +18,13 @@ docker compose version
 
 ## Comment lancer le projet
 
-Démarrez Docker Desktop.
+Démarrez l'application sur votre ordinateur Docker Desktop que vous avez téléchargé au préalable (voir la partie "prérequis")
 
 Placez-vous à la racine du projet, puis lancez :
 
 ```bash
 docker compose down
 docker compose up --build -d
-```
-
-Ensuite, vérifiez que tout tourne :
-
-```bash
-docker compose ps
 ```
 
 ## Ouvrir le projet

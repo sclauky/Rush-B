@@ -43,27 +43,27 @@
 
     .navbar {
       position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(18px);
-      background: rgba(9,9,15,0.65);
-      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      background: rgba(9,9,15,0.78);
+      border-bottom: 1px solid rgba(245, 247, 255, 0.14);
     }
     .nav-inner {
       width: min(100% - 2rem, 1200px); margin: 0 auto;
-      min-height: 78px; display: flex; align-items: center;
-      justify-content: space-between; gap: 1rem;
+      min-height: 88px; display: flex; align-items: center;
+      justify-content: space-between; gap: 1.5rem;
     }
-    .logo { display: flex; align-items: center; gap: .85rem; }
+    .logo { display: flex; align-items: center; gap: .7rem; }
     .logo-mark {
-      width: 42px; height: 42px; border-radius: 14px;
+      width: 36px; height: 36px; border-radius: 50%;
       display: grid; place-items: center;
       font-family: "Orbitron", sans-serif; font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      color: white; font-size: .9rem;
-      box-shadow: 0 0 20px rgba(124,92,255,0.45);
+      background: var(--text);
+      color: var(--bg); font-size: .85rem;
+      box-shadow: none;
     }
-    .logo-text { font-family: "Orbitron", sans-serif; font-size: 1.1rem; letter-spacing: .12em; }
-    .nav-links, .nav-actions { display: flex; align-items: center; gap: 1rem; }
-    .nav-links a { color: var(--muted); transition: .25s; }
+    .logo-text { font-family: "Orbitron", sans-serif; font-size: .95rem; letter-spacing: .2em; }
+    .nav-links, .nav-actions { display: flex; align-items: center; gap: 1.7rem; }
+    .nav-links a { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; transition: .25s; }
     .nav-links a:hover, .nav-links a.active { color: var(--text); }
     .nav-links a.active { color: var(--primary-2); }
     .btn {
@@ -85,7 +85,6 @@
       display: flex; align-items: flex-end; justify-content: space-between;
       gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem;
     }
-    .swipe-title-wrap {}
     .swipe-eyebrow {
       font-family: "Space Mono", monospace;
       font-size: .75rem; font-weight: 700;
