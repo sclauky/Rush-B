@@ -407,14 +407,39 @@
 
   .hero h1 {
     font-family: "Inter", sans-serif;
-    font-size: clamp(3.2rem, 8vw, 8rem);
-    line-height: 1.1;
-    max-width: 10ch;
+    font-size: clamp(2.5rem, 7vw, 7rem);
+    line-height: 1;
+    max-width: none;
     margin: 0;
-    text-align: left;
+    text-align: right;
     letter-spacing: 0;
     font-weight: 800;
     text-shadow: none;
+  }
+
+  .elevator {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: clamp(0.5rem, 2vw, 2rem);
+    width: 100%;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .elevatorL,
+  .elevatorR {
+    display: block;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  .elevatorL {
+    transform: translateX(calc(var(--elevator-progress, 0) * -10em));
+  }
+
+  .elevatorR {
+    text-align: left;
+    transform: translateX(calc(var(--elevator-progress, 0) * 10em));
   }
 
   .home-answer {
