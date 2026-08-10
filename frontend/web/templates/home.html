@@ -83,37 +83,14 @@
 
     <main>
       <section class="hero">
-        <div class="container hero-grid">
-          <div class="hero-content">
-            <span class="eyebrow">Le forum où les squads se forment</span>
-            <h1>Le matchmaking t’a trahi.</h1>
-            <h1>Nous non.</h1>
+        <div class="container hero-content">
+          <h1>Le matchmaking t'as trahi.</h1>
+        </div>
+      </section>
 
-            <p>
-              Un forum pensé pour les joueurs qui veulent rencontrer du monde,
-              organiser des parties, partager des astuces et discuter de leurs
-              jeux préférés.
-            </p>
-
-            <div class="hero-actions">
-              {{if .IsAuthenticated}}
-              <a href="/posts" class="btn btn-primary">Continuer</a>
-              {{else}}
-              <button class="btn btn-primary open-register-modal" type="button">
-                Commencer
-              </button>
-              {{end}}
-
-              <a href="/posts" class="btn btn-ghost">Explorer les posts</a>
-            </div>
-
-            <div class="hero-stats"></div>
-          </div>
-
-          <div class="hero-panel">
-            <div class="panel-glow"></div>
-            <div class="post-meta"></div>
-          </div>
+      <section class="home-answer">
+        <div class="container home-answer-content">
+          <h2>Nous non.</h2>
         </div>
       </section>
     </main>
