@@ -450,7 +450,7 @@ func registerHandler(c *gin.Context) {
 	username := strings.TrimSpace(c.PostForm("username"))
 	firstName := strings.TrimSpace(c.PostForm("first_name"))
 	lastName := strings.TrimSpace(c.PostForm("last_name"))
-	email := strings.TrimSpace(c.PostForm("email"))
+	email := strings.ToLower(strings.TrimSpace(c.PostForm("email")))
 	password := c.PostForm("password")
 	confirmPassword := c.PostForm("confirm_password")
 
@@ -496,7 +496,7 @@ func registerHandler(c *gin.Context) {
 }
 
 func loginHandler(c *gin.Context) {
-	email := strings.TrimSpace(c.PostForm("email"))
+	email := strings.ToLower(strings.TrimSpace(c.PostForm("email")))
 	password := c.PostForm("password")
 
 	if email == "" || password == "" {
