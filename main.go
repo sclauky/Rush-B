@@ -702,6 +702,10 @@ func main() {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
 
+	r.GET("/chat", func(c *gin.Context) {
+		c.Redirect(http.StatusTemporaryRedirect, "http://localhost:5001")
+	})
+
 	r.GET("/", func(c *gin.Context) {
 		isAuthenticated := false
 
