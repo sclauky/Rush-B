@@ -434,12 +434,12 @@
   }
 
   .elevatorL {
-    transform: translateX(calc(var(--elevator-progress, 0) * -10em));
+    transform: translateX(0);
   }
 
   .elevatorR {
     text-align: left;
-    transform: translateX(calc(var(--elevator-progress, 0) * 10em));
+    transform: translateX(0);
   }
 
   .home-answer {

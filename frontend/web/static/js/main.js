@@ -1,24 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const elevator = document.querySelector(".elevator");
-
-  if (elevator) {
-    let scrollFrame = null;
-
-    const updateElevator = () => {
-      const scrollRange = Math.max(window.innerHeight, elevator.offsetHeight * 2);
-      const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
-      elevator.style.setProperty("--elevator-progress", progress.toFixed(3));
-      scrollFrame = null;
-    };
-
-    window.addEventListener("scroll", () => {
-      if (scrollFrame === null) {
-        scrollFrame = window.requestAnimationFrame(updateElevator);
-      }
-    }, { passive: true });
-
-    updateElevator();
-  }
 
   const menuToggle = document.getElementById("menu-toggle");
   const navbar = document.querySelector(".navbar");
