@@ -27,7 +27,7 @@ docker compose down
 docker compose up --build -d
 ```
 
-En suite, il faut penser à lancer npm pour faire fonctionner les messages privé. Pour ce faire:
+En suite, il faut penser à lancer npm pour faire fonctionner les messages privés. Pour ce faire:
 
 ```
 cd .\backend\overall-chat\
