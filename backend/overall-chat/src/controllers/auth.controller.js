@@ -1,5 +1,10 @@
 export const signup = (req, res) => {
-    res.send("signup route")
+    const { email, fullName, password } = req.body;
+    try {
+        
+    } catch (error) {
+        
+    }
 }
 
 export const login = (req, res) => {
