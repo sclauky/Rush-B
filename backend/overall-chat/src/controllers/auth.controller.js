@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import { generateToken } from "../utils/generateToken.js";
 
 export const signup = async (req, res) => {
     const { email, fullName, password } = req.body;
@@ -23,13 +24,21 @@ export const signup = async (req, res) => {
 
         if(newUser){
             // jwt token generation
+            generateToken(newUser._id, res);
+            await newUser.save();
 
+            res.status(201).json({ 
+                _id: newUser._id,
+                email: newUser.email,
+                fullName: newUser.fullName,
+                profilePicture: newUser.profilePicture,
+            });
         } else {
             res.status(400).json({ message: "Invalid user data" });
         }
-
     } catch (error) {
-        
+        console.log("Error in signup controller:", error.message);
+        res.status(500).json({ message: "Server error" });
     }
 }
 
