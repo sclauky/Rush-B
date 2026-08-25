@@ -49,12 +49,6 @@ Ouvre cette URL dans votre navigateur :
 https://rushb.localhost
 ```
 
-### En HTTP
-
-```text
-http://rushb.localhost
-```
-
 ## Si ça ne marche pas
 
 ```bash
