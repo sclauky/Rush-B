@@ -185,7 +185,6 @@ C:.
 ├───root.crt
 ├───socialauth.exe
 ├───.dockerignore
-├───.env
 ├───.gitignore
 └───.postman
 ```
