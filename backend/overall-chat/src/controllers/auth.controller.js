@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 
 export const signup = async (req, res) => {
-    const { email, fullName, password } = req.body;
+    const { email, fullName, password } = req.body ?? {};
     try {
         if (!fullName || !email || !password) {
             return res.status(400).json({ message: "All fields are requiered"})
@@ -46,15 +46,19 @@ export const signup = async (req, res) => {
 }
 
 export const login = async (req, res) => {
-    const { email, password} = req.body
+    const { email, password } = req.body ?? {};
     try {
-        const user = await User.findOne ({email})
-
-        if(!user) {
-            return res.status(400).json({message: "invalid credential"})
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
         }
 
-        const ispassword = await bcrypt.compare(password, user.password)
+        const user = await User.findOne ({email});
+
+        if(!user) {
+            return res.status(400).json({message: "invalid credentials"});
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if(!isPasswordCorrect) {
             return res.status(400).json({message: "invalid credentials"})
         }
