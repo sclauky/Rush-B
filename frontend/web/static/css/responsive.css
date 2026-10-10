@@ -44,6 +44,7 @@ body .navbar .menu-toggle::after {
 }
 
 body .navbar.menu-open .nav-links {
+  display: flex;
   top: 100%;
   left: 0;
   right: auto;
