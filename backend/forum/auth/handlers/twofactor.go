@@ -12,21 +12,14 @@ import (
 	"socialauth/backend/forum/auth/utils"
 )
 
-// ── Génération du code ────────────────────────────────────────────────────────
-
 func generateCode() (string, error) {
 	b := make([]byte, 3)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	// 6 chiffres à partir des 3 bytes
 	n := int(b[0])<<16 | int(b[1])<<8 | int(b[2])
 	return fmt.Sprintf("%06d", n%1000000), nil
 }
-
-// ── Send2FACode — appelé juste après la validation du mot de passe ─────────────
-// Stocke le code en DB et envoie l'e-mail.
-// Retourne l'ID du code stocké (pour la session temporaire).
 
 func Send2FACodeForUser(db *sql.DB, userID int, email, firstName string) error {
 	code, err := generateCode()
@@ -34,7 +27,6 @@ func Send2FACodeForUser(db *sql.DB, userID int, email, firstName string) error {
 		return err
 	}
 
-	// Invalider les anciens codes non utilisés de cet utilisateur
 	db.Exec(`UPDATE two_factor_codes SET used = 1 WHERE user_id = ? AND used = 0`, userID)
 
 	expiresAt := time.Now().Add(10 * time.Minute)
@@ -49,17 +41,12 @@ func Send2FACodeForUser(db *sql.DB, userID int, email, firstName string) error {
 	return utils.Send2FACode(email, firstName, code)
 }
 
-// ── Verify2FA — POST /auth/2fa/verify ────────────────────────────────────────
-
 type Verify2FARequest struct {
 	Code string `json:"code" form:"code" binding:"required"`
 }
 
-// Verify2FAHandler vérifie le code saisi et, si correct, crée la session définitive.
-// Il récupère le pending_user_id depuis un cookie temporaire posé au login.
 func Verify2FAHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Récupérer l'ID utilisateur depuis le cookie temporaire
 		pendingUserID, err := c.Cookie("pending_2fa_user")
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "session 2FA expirée"})
@@ -72,7 +59,6 @@ func Verify2FAHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Chercher le code valide en DB
 		var codeID int
 		var storedCode string
 		var expiresAt time.Time
@@ -107,10 +93,8 @@ func Verify2FAHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Marquer le code comme utilisé
 		db.Exec(`UPDATE two_factor_codes SET used = 1 WHERE id = ?`, codeID)
 
-		// Créer la session définitive
 		sessionToken, err := utils.GenerateSessionToken()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "génération session"})
@@ -130,13 +114,10 @@ func Verify2FAHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Supprimer le cookie temporaire
 		c.SetCookie("pending_2fa_user", "", -1, "/", "", false, true)
 
-		// Poser le vrai cookie de session
 		c.SetCookie("session_token", sessionToken, int(7*24*time.Hour.Seconds()), "/", "", false, true)
 
-		// Redirection HTML ou réponse JSON selon le client
 		if c.GetHeader("Accept") == "application/json" {
 			c.JSON(http.StatusOK, gin.H{"ok": true})
 		} else {
@@ -153,7 +134,6 @@ func Resend2FAHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Vérifier le cooldown (ne pas renvoyer plus d'1 fois par minute)
 		var lastCreated time.Time
 		err = db.QueryRow(`
 			SELECT created_at FROM two_factor_codes
