@@ -698,7 +698,7 @@ func main() {
 	r.Static("/static", "frontend/web/static")
 	r.Static("/uploads", "frontend/web/uploads")
 
-	r.GET("/swipe", func(c *gin.Context) {
+	r.GET("/swipe", authMiddleware(), func(c *gin.Context) {
 		c.HTML(http.StatusOK, "swipe.html", gin.H{})
 	})
 

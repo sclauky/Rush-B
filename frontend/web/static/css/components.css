@@ -299,10 +299,20 @@
   gap: 0.6rem;
   color: var(--muted);
   font-size: 0.95rem;
+  line-height: 1.2;
 }
 
 .checkbox-row input {
   accent-color: var(--primary);
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.password-toggle-row {
+  margin-top: 0.5rem;
 }
 
 .form-link,

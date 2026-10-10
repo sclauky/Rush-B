@@ -42,6 +42,7 @@ func RegisterHandler(db *sql.DB) gin.HandlerFunc {
 		}
 		_, err = db.Exec(`INSERT INTO users (first_name, last_name, email, username, password_hash, role) VALUES (?, ?, ?, ?, ?, 'user')`,
 			req.FirstName, req.LastName, req.Email, req.Username, string(hash))
+			
 		if err != nil {
 			c.Redirect(http.StatusSeeOther, "/register?error=Erreur+creation+compte")
 			return
