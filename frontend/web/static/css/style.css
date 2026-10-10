@@ -354,7 +354,7 @@
     padding: 5rem 0;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     min-height: calc(100vh - 78px);
     position: relative;
   }
@@ -386,11 +386,11 @@
   }
 
   .hero-content {
-    text-align: center;
     width: 100%;
     margin: 0;
     padding: clamp(1.5rem, 4vw, 3rem) 0;
-    text-align: left;
+    display: grid;
+    place-items: center;
   }
   
   .eyebrow,
@@ -411,7 +411,7 @@
     line-height: 1;
     max-width: none;
     margin: 0;
-    text-align: left;
+    text-align: center;
     letter-spacing: 0;
     font-weight: 800;
     text-shadow: none;
@@ -419,9 +419,10 @@
 
   .elevator {
     display: block;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     overflow: visible;
-    text-align: left;
+    text-align: center;
   }
 
   .elevator span {
