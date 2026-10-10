@@ -42,7 +42,7 @@ func RegisterHandler(db *sql.DB) gin.HandlerFunc {
 		}
 		_, err = db.Exec(`INSERT INTO users (first_name, last_name, email, username, password_hash, role) VALUES (?, ?, ?, ?, ?, 'user')`,
 			req.FirstName, req.LastName, req.Email, req.Username, string(hash))
-			
+
 		if err != nil {
 			c.Redirect(http.StatusSeeOther, "/register?error=Erreur+creation+compte")
 			return
@@ -124,7 +124,7 @@ func createSession(c *gin.Context, db *sql.DB, userID int) error {
 	return nil
 }
 
-func isAuthenticated(c *gin.Context, db *sql.DB) bool {
+func IsAuthenticated(c *gin.Context, db *sql.DB) bool {
 	token, err := c.Cookie("session_token")
 	if err != nil || token == "" {
 		return false
@@ -143,9 +143,5 @@ func isAuthenticated(c *gin.Context, db *sql.DB) bool {
 		return false
 	}
 
-	if time.Now().After(expiresAt) {
-		return false
-	}
-
-	return true
+	return time.Now().Before(expiresAt)
 }

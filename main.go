@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	authHandlers "socialauth/backend/forum/auth/handlers"
 	"socialauth/backend/forum/auth/utils"
 	commentDB "socialauth/backend/forum/comment/db"
 	commentH "socialauth/backend/forum/comment/handlers"
@@ -707,50 +708,16 @@ func main() {
 	})
 
 	r.GET("/", func(c *gin.Context) {
-		isAuthenticated := false
-
-		token, err := c.Cookie("session_token")
-		if err == nil {
-			var userID int
-			var expiresAt time.Time
-
-			err = db.QueryRow(
-				`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`,
-				token,
-			).Scan(&userID, &expiresAt)
-
-			if err == nil && time.Now().Before(expiresAt) {
-				isAuthenticated = true
-			}
-		}
-
 		c.HTML(http.StatusOK, "home.html", gin.H{
-			"IsAuthenticated": isAuthenticated,
+			"IsAuthenticated": authHandlers.IsAuthenticated(c, db),
 		})
 	})
 
 	r.GET("/logout", logoutHandler)
 
 	r.GET("/login", func(c *gin.Context) {
-		isAuthenticated := false
-
-		token, err := c.Cookie("session_token")
-		if err == nil {
-			var userID int
-			var expiresAt time.Time
-
-			err = db.QueryRow(
-				`SELECT user_id, expires_at FROM sessions WHERE session_token = ?`,
-				token,
-			).Scan(&userID, &expiresAt)
-
-			if err == nil && time.Now().Before(expiresAt) {
-				isAuthenticated = true
-			}
-		}
-
 		c.HTML(http.StatusOK, "login.html", gin.H{
-			"IsAuthenticated": isAuthenticated,
+			"IsAuthenticated": authHandlers.IsAuthenticated(c, db),
 		})
 	})
 	r.POST("/login", loginHandler)
